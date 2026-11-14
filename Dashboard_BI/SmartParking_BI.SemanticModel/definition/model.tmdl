@@ -1,0 +1,18 @@
+model Model
+	culture: es-CO
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: es-CO
+	annotation __PBI_TimeIntelligenceEnabled = 0
+
+ref table DimFecha
+ref table DimHora
+ref table DimSensor
+ref table DimUbicacion
+ref table FactMedicion
+ref table EstadoEspacioVivo
+ref table MovimientoVivo
+ref table SerieVivo
+
+ref expression Servidor
+ref expression BaseDatos

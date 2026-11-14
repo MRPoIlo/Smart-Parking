@@ -1,0 +1,53 @@
+table DimHora
+	lineageTag: df5585fc-f4f6-4bdd-b03a-383fa90c93b2
+
+	column sk_hora
+		dataType: int64
+		isHidden
+		lineageTag: 8c4c7083-7d00-4be0-9d73-9717c4de9361
+		summarizeBy: none
+		sourceColumn: sk_hora
+
+	column hora_texto
+		dataType: string
+		lineageTag: 19cfaf6f-7e8b-4251-bf05-cb8962d04d09
+		summarizeBy: none
+		sourceColumn: hora_texto
+		sortByColumn: sk_hora
+
+	column rango_hora
+		dataType: string
+		lineageTag: f145bc88-21c9-465f-93d1-a6d19a04d93f
+		summarizeBy: none
+		sourceColumn: rango_hora
+		sortByColumn: sk_hora
+
+	column franja
+		dataType: string
+		lineageTag: 5abfa06c-478d-4d5a-9326-61c470f1d96f
+		summarizeBy: none
+		sourceColumn: franja
+
+	column es_hora_pico
+		dataType: boolean
+		lineageTag: 797bd820-ef50-4b26-8e48-607e1193caa9
+		summarizeBy: none
+		sourceColumn: es_hora_pico
+
+	column jornada
+		dataType: string
+		lineageTag: 4d5c1541-cf77-49b9-98fd-cc0d5342b14a
+		summarizeBy: none
+		sourceColumn: jornada
+
+	partition DimHora = m
+		mode: import
+		source =
+				let
+				    Origen = Sql.Database(Servidor, BaseDatos),
+				    Tabla = Origen{[Schema = "dbo", Item = "DimHora"]}[Data]
+				in
+				    Tabla
+
+	annotation PBI_ResultType = Table
+

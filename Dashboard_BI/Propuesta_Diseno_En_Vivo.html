@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Parking · Plano en vivo</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --raised: #222221;
+    --line: #2c2c2a;
+    --axis: #383835;
+    --ink: #f0efec;
+    --ink2: #c3c2b7;
+    --muted: #898781;
+    --blue: #3987e5;
+    --good: #0ca30c;
+    --warn: #fab219;
+    --crit: #d03b3b;
+    --stale: #5e5d59;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; background: var(--page); }
+  body { color: var(--ink); font: 14px/1.45 var(--sans); min-height: 100vh; display: grid; place-items: center; padding: 20px 16px; }
+  ::selection { background: color-mix(in srgb, var(--blue) 45%, transparent); color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+
+  .board { width: 100%; max-width: 1280px; display: grid; gap: 16px; }
+
+  /* barra superior */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand svg { flex: none; }
+  h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .where { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+  .tools { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .conn { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 13px; color: var(--ink); min-width: 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); flex: none; }
+  .conn[data-state="ok"] .dot { animation: latido 2.4s var(--ease-out) infinite; }
+  .conn[data-state="off"] .dot { background: transparent; border: 2px solid var(--warn); width: 10px; height: 10px; }
+  @keyframes latido { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 55%, transparent); } 70%, 100% { box-shadow: 0 0 0 7px transparent; } }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 2px; }
+  .seg button { font: inherit; font-size: 12.5px; color: var(--ink2); background: transparent; border: 0; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 120ms var(--ease-out); }
+  .seg button[aria-pressed="true"] { background: var(--raised); color: var(--ink); }
+  .seg button:active { transform: scale(0.97); }
+  @media (hover: hover) and (pointer: fine) { .seg button:hover { color: var(--ink); } }
+
+  /* cuerpo */
+  .grid { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(300px, 1fr); gap: 16px; align-items: stretch; }
+  @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .panel h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--ink2); letter-spacing: 0.01em; }
+
+  /* plano */
+  .plan { padding-bottom: 10px; }
+  .plan svg { display: block; width: 100%; height: auto; }
+  .stall { transition: fill 220ms var(--ease-out), stroke 220ms var(--ease-out); }
+  .car { transition: opacity 220ms var(--ease-out), transform 260ms var(--ease-out); transform-box: fill-box; transform-origin: center; }
+  .bay[data-s="libre"] .car { opacity: 0; transform: translateY(10px) scale(0.96); }
+  .bay[data-s="libre"] .stall { fill: color-mix(in srgb, var(--good) 8%, var(--raised)); stroke: var(--good); }
+  .bay[data-s="ocupado"] .stall { fill: color-mix(in srgb, var(--crit) 10%, var(--raised)); stroke: var(--crit); }
+  .bay[data-s="sin"] .stall { fill: var(--raised); stroke: var(--stale); }
+  .bay[data-s="sin"] .car { opacity: 0.28; }
+  .bay[data-s="libre"] .car, .bay[data-s="ocupado"] .car { fill: var(--crit); }
+  .cone { fill: var(--blue); opacity: 0.1; transition: opacity 220ms var(--ease-out); }
+  .bay[data-s="sin"] .cone { opacity: 0.03; }
+  .t { font-family: var(--sans); fill: var(--ink); }
+  .t2 { font-family: var(--sans); fill: var(--ink2); }
+  .tm { font-family: var(--sans); fill: var(--muted); }
+  .num { font-variant-numeric: tabular-nums; }
+  .arm { transform-origin: 696px 440px; transition: transform 320ms var(--ease-out); }
+  .arm[data-open="true"] { transform: rotate(-78deg); }
+
+  /* columna derecha */
+  .rail { display: grid; gap: 16px; grid-template-rows: auto auto 1fr; }
+  .hero { display: grid; gap: 14px; }
+  .hero-fig { display: flex; align-items: baseline; gap: 10px; }
+  .hero-n { font-size: 72px; line-height: 0.95; font-weight: 600; letter-spacing: -0.03em; }
+  .hero-l { color: var(--ink2); font-size: 15px; }
+  .meter { display: flex; gap: 2px; height: 10px; }
+  .meter i { flex: 1; border-radius: 5px; background: var(--stale); transition: background-color 220ms var(--ease-out); }
+  .meter i[data-s="libre"] { background: var(--good); }
+  .meter i[data-s="ocupado"] { background: var(--crit); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--ink2); font-size: 12.5px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend b { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .alert { display: none; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 8px; background: color-mix(in srgb, var(--warn) 10%, var(--raised)); border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--line)); color: var(--ink); font-size: 13px; }
+  .alert[data-show="true"] { display: flex; }
+
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: var(--raised); border: 1px solid var(--axis); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; white-space: nowrap; opacity: 0; transform: translateY(4px); transition: opacity 120ms var(--ease-out), transform 120ms var(--ease-out); z-index: 2; box-shadow: 0 6px 18px rgba(0,0,0,0.45); }
+  .tip[data-on="true"] { opacity: 1; transform: none; }
+  .tip small { display: block; color: var(--muted); }
+
+  .feed { list-style: none; margin: 0; padding: 0; }
+  .feed li { display: grid; grid-template-columns: 56px 20px 1fr auto; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .feed li:first-child { border-top: 0; }
+  .feed time { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .feed .libres { color: var(--ink2); font-variant-numeric: tabular-nums; }
+
+  .foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+  .foot span { font-variant-numeric: tabular-nums; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .conn[data-state="ok"] .dot { animation: none; }
+    .car, .arm, .stall { transition: opacity 120ms linear, fill 120ms linear, stroke 120ms linear; transform: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <header class="top">
+    <div class="brand">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+        <rect x="1" y="1" width="34" height="34" rx="9" fill="#222221" stroke="#2c2c2a"/>
+        <path d="M13 26V10h6.2a4.8 4.8 0 0 1 0 9.6H13" stroke="#3987e5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1>Smart Parking</h1>
+        <p class="where">Maqueta SP-01 · Sector 3 · caseta de control</p>
+      </div>
+    </div>
+    <div class="tools">
+      <div class="seg" role="group" aria-label="Vista previa de estados">
+        <button type="button" data-view="live" aria-pressed="true">En línea</button>
+        <button type="button" data-view="lleno" aria-pressed="false">Lleno</button>
+        <button type="button" data-view="off" aria-pressed="false">Sin señal</button>
+      </div>
+      <div class="conn" id="conn" data-state="ok" role="status"><span class="dot"></span><span id="connTxt">En línea · último dato 19:42:05</span></div>
+    </div>
+  </header>
+
+  <main class="grid">
+
+    <section class="panel plan" aria-labelledby="hPlano">
+      <h2 id="hPlano">Plano de la maqueta</h2>
+      <svg id="plano" viewBox="0 0 760 540" role="img" aria-label="Plano superior del parqueadero con cuatro espacios, la talanquera y los sensores">
+        <!-- calle -->
+        <rect x="0" y="452" width="760" height="88" rx="10" fill="#141413"/>
+        <line x1="16" y1="508" x2="744" y2="508" stroke="#383835" stroke-width="2" stroke-dasharray="14 12"/>
+        <text x="20" y="478" class="tm" font-size="12">Calle</text>
+        <!-- parqueadero -->
+        <rect x="12" y="8" width="736" height="432" rx="12" fill="#1f1f1e" stroke="#2c2c2a"/>
+        <!-- muro inferior con entrada -->
+        <path d="M12 440h538M706 440h42" stroke="#383835" stroke-width="4" stroke-linecap="round"/>
+        <text x="628" y="470" class="tm" text-anchor="middle" font-size="12">Entrada</text>
+
+        <!-- espacios -->
+        <g id="bays"></g>
+
+        <!-- talanquera -->
+        <circle cx="696" cy="440" r="7" fill="#383835"/>
+        <g class="arm" id="arm" data-open="false">
+          <rect x="560" y="436" width="136" height="7" rx="3.5" fill="#f0efec"/>
+          <rect x="560" y="436" width="18" height="7" rx="3.5" fill="#d03b3b"/>
+          <rect x="598" y="436" width="18" height="7" rx="3.5" fill="#d03b3b"/>
+          <rect x="636" y="436" width="18" height="7" rx="3.5" fill="#d03b3b"/>
+        </g>
+        <!-- sensores de acceso -->
+        <g>
+          <circle cx="628" cy="500" r="6" fill="none" stroke="#3987e5" stroke-width="1.75"/>
+          <path d="M616 492a16 16 0 0 1 24 0" fill="none" stroke="#3987e5" stroke-width="1.75" stroke-linecap="round" opacity="0.6"/>
+          <text x="610" y="504" class="t2" font-size="12" text-anchor="end">FC-51 · lado calle</text>
+          <circle cx="628" cy="400" r="6" fill="none" stroke="#3987e5" stroke-width="1.75"/>
+          <path d="M616 408a16 16 0 0 0 24 0" fill="none" stroke="#3987e5" stroke-width="1.75" stroke-linecap="round" opacity="0.6"/>
+          <text x="610" y="404" class="t2" font-size="12" text-anchor="end">TCRT5000 · lado parqueadero</text>
+          <text x="36" y="404" class="tm" font-size="12">Circulación interna</text>
+        </g>
+        <text id="armTxt" x="696" y="424" class="t2" font-size="12" text-anchor="end">Talanquera cerrada</text>
+      </svg>
+      <p class="where" style="margin:8px 2px 4px">Un espacio se marca ocupado cuando su sensor HC-SR04 mide menos de 6 cm. Cada cambio se confirma con 3 lecturas seguidas.</p>
+    </section>
+
+    <aside class="rail">
+      <section class="panel hero" aria-labelledby="hLibres">
+        <h2 id="hLibres" style="margin:0">Espacios libres ahora</h2>
+        <div class="hero-fig"><span class="hero-n" id="heroN">2</span><span class="hero-l" id="heroL">de 4 espacios</span></div>
+        <div class="meter" id="meter" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="legend"><span><b style="background:var(--good)"></b>Libre</span><span><b style="background:var(--crit)"></b>Ocupado</span><span id="lgStale" hidden><b style="background:var(--stale)"></b>Sin dato</span></div>
+        <div class="alert" id="alert" data-show="false" role="status"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="hSerie">
+        <h2 id="hSerie">Ocupación por hora · últimas 24 horas</h2>
+        <div class="chart" id="chart">
+          <svg id="serie" viewBox="0 0 380 150" tabindex="0" role="img" aria-label="Línea con la ocupación por hora de las últimas 24 horas. Use las flechas para recorrer las horas."></svg>
+          <div class="tip" id="tip" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="hMov">
+        <h2 id="hMov">Últimos movimientos de la talanquera</h2>
+        <ul class="feed" id="feed"></ul>
+      </section>
+    </aside>
+
+  </main>
+
+  <footer class="foot">
+    <span>Datos tomados del DW · última carga 19:42:03 · se actualiza cada 5 s</span>
+    <span>Propuesta de diseño · los datos de esta vista son de ejemplo</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  var BAYS = [
+    { id: "E1", tipo: "General", sensor: "US-01" },
+    { id: "E2", tipo: "General", sensor: "US-02" },
+    { id: "E3", tipo: "General", sensor: "US-03" },
+    { id: "E4", tipo: "Preferencial", sensor: "US-04" }
+  ];
+  var VISTAS = {
+    live:  { s: ["ocupado", "libre", "ocupado", "libre"], d: [3.2, 21.4, 2.8, 19.8], desde: ["19:31", "19:08", "19:40", "18:52"], conn: "ok", arm: false },
+    lleno: { s: ["ocupado", "ocupado", "ocupado", "ocupado"], d: [3.2, 4.1, 2.8, 3.6], desde: ["19:31", "19:36", "19:40", "19:41"], conn: "ok", arm: false },
+    off:   { s: ["sin", "sin", "sin", "sin"], d: [null, null, null, null], desde: ["", "", "", ""], conn: "off", arm: false }
+  };
+  var MOV = [
+    ["19:41", "Entrada", 1], ["19:40", "Entrada", 2], ["19:36", "Salida", 3], ["19:31", "Entrada", 2], ["19:22", "Rechazo por lleno", 0]
+  ];
+  var SERIE = [12, 8, 6, 5, 4, 6, 10, 22, 41, 58, 63, 55, 49, 52, 60, 66, 71, 64, 58, 50, 47, 52, 50, 50];
+
+  function el(name, attrs, parent) {
+    var n = document.createElementNS(NS, name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+
+  /* ---------- plano: espacios ---------- */
+  var gBays = document.getElementById("bays");
+  var bayEls = [];
+  BAYS.forEach(function (b, i) {
+    var x = 36 + i * 172, y = 28, w = 152, h = 270;
+    var g = el("g", { "class": "bay", "data-s": "libre", transform: "translate(" + x + " " + y + ")" }, gBays);
+    el("path", { "class": "cone", d: "M" + (w / 2) + " 18 L" + (w - 14) + " 190 L14 190 Z" }, g);
+    el("rect", { "class": "stall", x: 0, y: 0, width: w, height: h, rx: 10, "stroke-width": 1.5, fill: "#222221", stroke: "#0ca30c" }, g);
+    // sensor montado en la pared superior
+    el("rect", { x: w / 2 - 14, y: 0, width: 28, height: 10, rx: 3, fill: "#383835" }, g);
+    el("circle", { cx: w / 2 - 6, cy: 5, r: 3, fill: "none", stroke: "#3987e5", "stroke-width": 1.4 }, g);
+    el("circle", { cx: w / 2 + 6, cy: 5, r: 3, fill: "none", stroke: "#3987e5", "stroke-width": 1.4 }, g);
+    // carro visto desde arriba
+    var car = el("g", { "class": "car" }, g);
+    el("rect", { x: w / 2 - 34, y: 74, width: 68, height: 128, rx: 18 }, car);
+    el("rect", { x: w / 2 - 26, y: 94, width: 52, height: 28, rx: 7, fill: "#0d0d0d", opacity: 0.55 }, car);
+    el("rect", { x: w / 2 - 26, y: 158, width: 52, height: 24, rx: 7, fill: "#0d0d0d", opacity: 0.55 }, car);
+    // etiqueta
+    var t1 = el("text", { x: 14, y: 30, "class": "t", "font-size": 17, "font-weight": 600 }, g); t1.textContent = b.id;
+    var t2 = el("text", { x: 14, y: 47, "class": "tm", "font-size": 11.5 }, g); t2.textContent = b.tipo;
+    if (b.tipo === "Preferencial") {
+      var ic = el("g", { transform: "translate(" + (w - 30) + " 22)", fill: "none", stroke: "#c3c2b7", "stroke-width": 1.6, "stroke-linecap": "round", "stroke-linejoin": "round" }, g);
+      el("circle", { cx: 7, cy: 3, r: 2.2 }, ic);
+      el("path", { d: "M7 7v7h6l2.5 5M7 10h6" }, ic);
+      el("path", { d: "M4 12a6 6 0 1 0 8 7" }, ic);
+    }
+    var rd = el("text", { x: 14, y: h - 30, "class": "t num", "font-size": 15, "font-weight": 600 }, g);
+    var sd = el("text", { x: 14, y: h - 12, "class": "tm num", "font-size": 11.5 }, g);
+    var st = el("text", { x: w - 14, y: h - 30, "class": "t2", "font-size": 12, "text-anchor": "end" }, g);
+    bayEls.push({ g: g, rd: rd, sd: sd, st: st });
+  });
+
+  /* ---------- serie ---------- */
+  var svg = document.getElementById("serie"), W = 380, H = 150, L = 30, R = 44, T = 10, B = 24;
+  var iw = W - L - R, ih = H - T - B;
+  function X(i) { return L + iw * i / (SERIE.length - 1); }
+  function Y(v) { return T + ih * (1 - v / 100); }
+  [0, 50, 100].forEach(function (v) {
+    el("line", { x1: L, x2: W - R, y1: Y(v), y2: Y(v), stroke: v === 0 ? "#383835" : "#2c2c2a", "stroke-width": 1 }, svg);
+    var t = el("text", { x: L - 6, y: Y(v) + 4, "text-anchor": "end", "class": "tm num", "font-size": 10.5 }, svg); t.textContent = v + "%";
+  });
+  var pts = SERIE.map(function (v, i) { return X(i) + "," + Y(v); }).join(" L");
+  el("path", { d: "M" + X(0) + "," + Y(0) + " L" + pts + " L" + X(SERIE.length - 1) + "," + Y(0) + " Z", fill: "#3987e5", opacity: 0.1 }, svg);
+  el("path", { d: "M" + pts, fill: "none", stroke: "#3987e5", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+  [0, 6, 12, 18, 23].forEach(function (i) {
+    var t = el("text", { x: X(i), y: H - 6, "text-anchor": "middle", "class": "tm num", "font-size": 10.5 }, svg);
+    var hh = (19 + 1 + i) % 24; t.textContent = (hh < 10 ? "0" : "") + hh + ":00";
+  });
+  var last = SERIE.length - 1;
+  el("circle", { cx: X(last), cy: Y(SERIE[last]), r: 6.5, fill: "#1a1a19" }, svg);
+  el("circle", { cx: X(last), cy: Y(SERIE[last]), r: 4.5, fill: "#3987e5" }, svg);
+  var endLbl = el("text", { x: X(last) + 12, y: Y(SERIE[last]) + 4, "class": "t num", "font-size": 12.5, "font-weight": 600 }, svg); endLbl.textContent = SERIE[last] + " %";
+  var cross = el("line", { y1: T, y2: Y(0), stroke: "#898781", "stroke-width": 1, opacity: 0 }, svg);
+  var hov = el("circle", { r: 4.5, fill: "#3987e5", stroke: "#1a1a19", "stroke-width": 2, opacity: 0 }, svg);
+  var tip = document.getElementById("tip"), chart = document.getElementById("chart"), cur = last;
+  function showAt(i) {
+    cur = i; var x = X(i);
+    cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("opacity", 1);
+    hov.setAttribute("cx", x); hov.setAttribute("cy", Y(SERIE[i])); hov.setAttribute("opacity", 1);
+    var hh = (20 + i) % 24; var label = (hh < 10 ? "0" : "") + hh + ":00";
+    tip.innerHTML = "<strong>" + SERIE[i] + " %</strong><small>" + label + "</small>";
+    var r = svg.getBoundingClientRect(), cr = chart.getBoundingClientRect();
+    var px = (x / W) * r.width + (r.left - cr.left), py = (Y(SERIE[i]) / H) * r.height;
+    tip.style.left = Math.min(Math.max(px - 34, 0), cr.width - 80) + "px";
+    tip.style.top = Math.max(py - 54, -4) + "px";
+    tip.setAttribute("data-on", "true");
+  }
+  function hide() { cross.setAttribute("opacity", 0); hov.setAttribute("opacity", 0); tip.setAttribute("data-on", "false"); }
+  svg.addEventListener("pointermove", function (e) {
+    var r = svg.getBoundingClientRect(); var x = (e.clientX - r.left) / r.width * W;
+    var i = Math.round((x - L) / iw * (SERIE.length - 1)); showAt(Math.max(0, Math.min(SERIE.length - 1, i)));
+  });
+  svg.addEventListener("pointerleave", hide);
+  svg.addEventListener("blur", hide);
+  svg.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowLeft") { showAt(Math.max(0, cur - 1)); e.preventDefault(); }
+    if (e.key === "ArrowRight") { showAt(Math.min(SERIE.length - 1, cur + 1)); e.preventDefault(); }
+    if (e.key === "Escape") hide();
+  });
+
+  /* ---------- movimientos ---------- */
+  var feed = document.getElementById("feed");
+  function icon(tipo) {
+    var c = tipo === "Entrada" ? "#0ca30c" : tipo === "Salida" ? "#3987e5" : "#fab219";
+    var d = tipo === "Entrada" ? "M4 10h9M10 6l4 4-4 4" : tipo === "Salida" ? "M16 10H7M10 6l-4 4 4 4" : "M10 5v6M10 14.5v.5";
+    return '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="' + c + '" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (tipo === "Rechazo por lleno" ? '<circle cx="10" cy="10" r="7.5"/>' : '') + '<path d="' + d + '"/></svg>';
+  }
+  MOV.forEach(function (m) {
+    var li = document.createElement("li");
+    li.innerHTML = "<time>" + m[0] + "</time>" + icon(m[1]) + "<span>" + m[1] + '</span><span class="libres">' + m[2] + (m[2] === 1 ? " libre" : " libres") + "</span>";
+    feed.appendChild(li);
+  });
+
+  /* ---------- vistas ---------- */
+  var heroN = document.getElementById("heroN"), heroL = document.getElementById("heroL"), meter = document.getElementById("meter").children;
+  var conn = document.getElementById("conn"), connTxt = document.getElementById("connTxt"), arm = document.getElementById("arm"), armTxt = document.getElementById("armTxt");
+  var alertEl = document.getElementById("alert"), lgStale = document.getElementById("lgStale");
+  function fmt(n) { return n.toFixed(1).replace(".", ",") + " cm"; }
+  function setView(name) {
+    var v = VISTAS[name];
+    v.s.forEach(function (s, i) {
+      var b = bayEls[i]; b.g.setAttribute("data-s", s);
+      meter[i].setAttribute("data-s", s);
+      b.rd.textContent = v.d[i] == null ? "Sin lectura" : fmt(v.d[i]);
+      b.sd.textContent = s === "ocupado" ? "Ocupado desde " + v.desde[i] : s === "libre" ? "Libre desde " + v.desde[i] : "Último dato 05/11 23:50";
+      b.st.textContent = s === "ocupado" ? "Ocupado" : s === "libre" ? "Libre" : "Sin señal";
+    });
+    var libres = v.s.filter(function (s) { return s === "libre"; }).length;
+    var sin = v.s[0] === "sin";
+    heroN.textContent = sin ? "—" : libres === 0 ? "0" : libres;
+    heroL.textContent = sin ? "sin datos recientes" : libres === 0 ? "parqueadero lleno" : "de 4 espacios";
+    lgStale.hidden = !sin;
+    conn.setAttribute("data-state", v.conn);
+    connTxt.textContent = sin ? "Sin señal · último dato 05/11 23:50" : "En línea · último dato 19:42:05";
+    arm.setAttribute("data-open", "false"); armTxt.textContent = libres === 0 && !sin ? "Talanquera cerrada · no abre" : "Talanquera cerrada";
+    if (sin) { alertEl.innerHTML = "No llegan lecturas hace más de 30 s. Revise maqueta, hotspot, puente y <em>Iniciar_TiempoReal</em>."; alertEl.setAttribute("data-show", "true"); }
+    else if (libres === 0) { alertEl.textContent = "Lleno: los carros que lleguen quedarán como rechazo por lleno."; alertEl.setAttribute("data-show", "true"); }
+    else alertEl.setAttribute("data-show", "false");
+  }
+  var btns = document.querySelectorAll(".seg button");
+  btns.forEach(function (b) {
+    b.addEventListener("click", function () {
+      btns.forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      setView(b.getAttribute("data-view"));
+    });
+  });
+  setView("live");
+})();
+</script>
+</body>
+</html>

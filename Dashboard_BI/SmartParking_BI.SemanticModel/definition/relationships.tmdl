@@ -1,0 +1,19 @@
+relationship rel_FactMedicion_DimFecha
+	fromColumn: FactMedicion.sk_fecha
+	toColumn: DimFecha.sk_fecha
+	relyOnReferentialIntegrity
+
+relationship rel_FactMedicion_DimHora
+	fromColumn: FactMedicion.sk_hora
+	toColumn: DimHora.sk_hora
+	relyOnReferentialIntegrity
+
+relationship rel_FactMedicion_DimSensor
+	fromColumn: FactMedicion.sk_sensor
+	toColumn: DimSensor.sk_sensor
+	relyOnReferentialIntegrity
+
+relationship rel_FactMedicion_DimUbicacion
+	fromColumn: FactMedicion.sk_ubicacion
+	toColumn: DimUbicacion.sk_ubicacion
+	relyOnReferentialIntegrity

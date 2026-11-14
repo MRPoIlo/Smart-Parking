@@ -1,0 +1,23 @@
+model Model
+	culture: es-CO
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: es-CO
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DimFecha","DimHora","DimSensor","DimUbicacion","FactMedicion","Servidor","BaseDatos"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table DimFecha
+ref table DimHora
+ref table DimSensor
+ref table DimUbicacion
+ref table FactMedicion
+
+ref cultureInfo es-CO
+

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía del tablero Smart Parking en tiempo real</title>
+<style>
+  :root { --bg:#f9f9f7; --card:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --line:#e1e0d9; --acc:#2a78d6; --warn:#fab219; --ok:#0c7a0c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d0d0d; --card:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --line:#2c2c2a; --acc:#3987e5; --ok:#0ca30c; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 "Segoe UI", system-ui, sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:32px 20px 64px; }
+  h1 { font-size:28px; margin:0 0 4px; }
+  h2 { font-size:20px; margin:40px 0 12px; padding-top:8px; border-top:1px solid var(--line); }
+  p, li { color:var(--ink2); }
+  .sub { color:var(--ink2); margin:0 0 24px; }
+  ol { padding-left:22px; }
+  li { margin:8px 0; }
+  code { font:inherit; background:var(--card); border:1px solid var(--line); border-radius:4px; padding:1px 6px; color:var(--ink); }
+  pre { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px 14px; overflow:auto; color:var(--ink); font:inherit; white-space:pre-wrap; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--ink); font-weight:600; }
+  td { color:var(--ink2); }
+  .nota { border-left:3px solid var(--warn); background:var(--card); padding:10px 14px; border-radius:0 8px 8px 0; }
+  .nota p { margin:4px 0; }
+  .ok { color:var(--ok); }
+  @media print { body { background:#fff; color:#000; } }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Tablero Smart Parking en tiempo real</h1>
+<p class="sub">Power BI conectado al DW (<code>SmartParking_DW</code>), con una página que se actualiza sola cada 5 segundos.</p>
+
+<h2>1. Qué hay en la carpeta</h2>
+<table>
+  <tr><th>Archivo</th><th>Para qué sirve</th></tr>
+  <tr><td><code>SmartParking_BI.pbip</code></td><td>El tablero. Se abre con doble clic en Power BI Desktop (junto con las carpetas <code>SmartParking_BI.Report</code> y <code>SmartParking_BI.SemanticModel</code>; no las separe).</td></tr>
+  <tr><td><code>sql\16_tiempo_real_dw.sql</code></td><td>Crea en el DW la parte en vivo: un procedimiento que lleva lo nuevo de <code>SmartParking_Vivo</code> al DW, dos tablas de estado actual y una vista por hora.</td></tr>
+  <tr><td><code>Iniciar_TiempoReal.ps1</code></td><td>Ejecuta ese procedimiento cada 5 segundos mientras esté abierto.</td></tr>
+</table>
+
+<h2>2. Cómo funciona el tiempo real</h2>
+<p>La maqueta publica por MQTT, el puente (<code>puente_vivo.py</code>) guarda en <code>SmartParking_Vivo</code>, el script <code>Iniciar_TiempoReal.ps1</code> pasa esos datos al DW con el mismo grano del ETL de SSIS (un sensor en una hora de un día) y Power BI lee el DW en modo DirectQuery. La página "En vivo" vuelve a consultar sola cada 5 segundos.</p>
+<p>El histórico simulado (3 ago a 31 oct 2026) no se toca: el script solo escribe de 1 de noviembre en adelante.</p>
+
+<h2>3. Montaje, paso a paso</h2>
+<ol>
+  <li>Una sola vez, instalar la parte en vivo en el DW. En PowerShell, dentro de la carpeta <code>Dashboard_BI\sql</code>:
+<pre>sqlcmd -S localhost -E -b -f 65001 -i 16_tiempo_real_dw.sql</pre>
+  Con SQL Express cambie <code>localhost</code> por <code>.\SQLEXPRESS</code>.</li>
+  <li>Encender la maqueta y el hotspot, y dejar abierto el puente (<code>py puente_vivo.py</code> en la carpeta <code>06_bd_v2</code>).</li>
+  <li>En otra ventana de PowerShell, dentro de <code>Dashboard_BI</code>, dejar corriendo:
+<pre>.\Iniciar_TiempoReal.ps1</pre>
+  Si dice que no puede ejecutar scripts: <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code>.</li>
+  <li>Abrir <code>SmartParking_BI.pbip</code> con Power BI Desktop y entrar a la página "En vivo".</li>
+</ol>
+
+<h2>4. Si Power BI dice "No se puede cargar el modelo"</h2>
+<p>En este PC pasó porque SQL Server usa un certificado propio que Windows no reconoce y Power BI pide la conexión cifrada. Se arregla así:</p>
+<ol>
+  <li>Archivo, Opciones y configuración, Configuración de origen de datos.</li>
+  <li>Elegir <code>localhost;SmartParking_DW</code>, botón "Editar permisos".</li>
+  <li>Quitar la marca de "Cifrar conexiones", Aceptar y Cerrar. Cerrar Power BI y abrir otra vez el <code>.pbip</code>.</li>
+</ol>
+<p>Si el servidor no se llama <code>localhost</code> (por ejemplo <code>.\SQLEXPRESS</code>): Inicio, Transformar datos, Editar parámetros, y cambiar <code>Servidor</code>.</p>
+
+<h2>5. Qué muestra cada página</h2>
+<table>
+  <tr><th>Página</th><th>Qué responde</th></tr>
+  <tr><td>En vivo</td><td>Un plano de la maqueta dibujado con el estado real de cada espacio: E1 a E4 en verde si están libres o en rojo con el carro si están ocupados, con la distancia del sensor y desde cuándo. A la derecha, la cifra de espacios libres con una barra de 4 segmentos, la ocupación por hora de las últimas 24 horas con datos y los últimos movimientos de la talanquera. Arriba a la derecha dice "En línea" si el sensor reportó en los últimos 30 segundos; si no, dice "Sin señal" con la hora del último dato y todo se ve en gris. El plano y la cifra son dibujos SVG que calculan las medidas de <code>EstadoEspacioVivo</code> (carpeta "Dibujos"); si quiere cambiar colores o textos, está en <code>generador\svgdax.py</code>.</td></tr>
+  <tr><td>Red de parqueaderos</td><td>Mapa de calor con la ocupación por día de la semana y hora, y la ocupación por parqueadero y por semana. Los filtros de arriba (parqueadero, tipo de día y mes) funcionan en esta página y en la siguiente.</td></tr>
+  <tr><td>Congestión y sensores</td><td>Carros rechazados por estar lleno, por parqueadero y día, rechazos por hora, y qué sensores tienen más lecturas con error.</td></tr>
+</table>
+<p>Las páginas 2 y 3 usan solo el histórico simulado (agosto a octubre). Lo real de la maqueta se ve en la página "En vivo".</p>
+
+<h2>6. Qué se probó y qué no</h2>
+<div class="nota">
+  <p><strong>Probado en este PC:</strong> el tablero abre en Power BI Desktop 2.159 y las tres páginas cargan con datos reales del DW (101.724 filas de hechos en el histórico). El procedimiento de carga se probó insertando lecturas de prueba en una transacción que luego se deshizo, y se ejecutó con los datos reales de <code>SmartParking_Vivo</code> (los del 5 de noviembre). Se cambió el estado de E1 directamente en el DW y la página "En vivo" lo mostró sola, sin tocar Power BI. El script <code>Iniciar_TiempoReal.ps1</code> corrió sin errores.</p>
+  <p><strong>No probado:</strong> con la maqueta encendida y el puente enviando datos al mismo tiempo, ni el tablero en otro PC, ni publicado en el servicio de Power BI (para eso un DW local necesita puerta de enlace). Ahora mismo <code>SmartParking_Vivo</code> solo tiene datos del 5 de noviembre, así que la página "En vivo" muestra "Sin señal" hasta que la maqueta vuelva a enviar.</p>
+</div>
+
+<h2>7. Cosas para tener en cuenta</h2>
+<ul>
+  <li>Si se vuelve a crear el DW con <code>13_modelo_dw.sql</code> (por ejemplo para dejarlo vacío antes del video de SSIS), hay que ejecutar otra vez el paso 1. El paquete de SSIS sigue funcionando igual.</li>
+  <li><code>Iniciar_TiempoReal.ps1</code> debe quedar abierto durante la demo. Si se cierra, el DW deja de recibir datos nuevos y la página "En vivo" pasa a "Sin señal".</li>
+  <li>Si un compañero usa el tablero en su PC necesita su propio SQL Server con las dos bases (<code>SmartParking_Vivo</code> y <code>SmartParking_DW</code>), el puente corriendo y este mismo script.</li>
+  <li>Los datos de hoy se actualizan cada 5 segundos. Para cambiar ese tiempo: Power BI, página "En vivo", Dar formato a la página, Actualización de la página.</li>
+</ul>
+
+<h2>8. Decisiones de diseño</h2>
+<p>Fondo oscuro para que se lea bien en una pantalla de control. Verde para libre, rojo para ocupado y amarillo para sin señal, siempre acompañados de texto, nunca solo color. Los colores de las series se validaron con el script de la guía de visualización (contraste y daltonismo en modo oscuro). Los números van completos, sin abreviar, y cada gráfico tiene un título que dice qué pregunta responde.</p>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,179 @@
+table FactMedicion
+
+	column sk_fecha
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: sk_fecha
+
+	column sk_hora
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: sk_hora
+
+	column sk_sensor
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: sk_sensor
+
+	column sk_ubicacion
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: sk_ubicacion
+
+	column total_lecturas
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		sourceColumn: total_lecturas
+
+	column lecturas_validas
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		sourceColumn: lecturas_validas
+
+	column lecturas_error
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		sourceColumn: lecturas_error
+
+	column suma_valor
+		dataType: decimal
+		isHidden
+		summarizeBy: sum
+		sourceColumn: suma_valor
+
+	column valor_promedio
+		dataType: decimal
+		isHidden
+		summarizeBy: none
+		sourceColumn: valor_promedio
+
+	column valor_minimo
+		dataType: decimal
+		isHidden
+		summarizeBy: none
+		sourceColumn: valor_minimo
+
+	column valor_maximo
+		dataType: decimal
+		isHidden
+		summarizeBy: none
+		sourceColumn: valor_maximo
+
+	column lecturas_ocupado
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		sourceColumn: lecturas_ocupado
+
+	column pct_ocupacion
+		dataType: decimal
+		isHidden
+		summarizeBy: none
+		sourceColumn: pct_ocupacion
+
+	column detecciones
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		sourceColumn: detecciones
+
+	column lecturas_baja_luz
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		sourceColumn: lecturas_baja_luz
+
+	column ocupaciones_iniciadas
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		sourceColumn: ocupaciones_iniciadas
+
+	column entradas
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		sourceColumn: entradas
+
+	column rechazos_por_lleno
+		dataType: int64
+		isHidden
+		summarizeBy: sum
+		sourceColumn: rechazos_por_lleno
+
+	column id_ejecucion
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: id_ejecucion
+
+	column fecha_carga
+		dataType: dateTime
+		isHidden
+		summarizeBy: none
+		sourceColumn: fecha_carga
+
+	measure Ocupaciones = SUM(FactMedicion[ocupaciones_iniciadas])
+		formatString: #,0
+		displayFolder: Histórico
+
+	measure '% Ocupación' = DIVIDE(SUM(FactMedicion[lecturas_ocupado]), CALCULATE(SUM(FactMedicion[lecturas_validas]), DimSensor[modelo] = "HC-SR04"))
+		formatString: 0.0%
+		displayFolder: Histórico
+
+	measure 'Entradas de carros' = SUM(FactMedicion[entradas])
+		formatString: #,0
+		displayFolder: Histórico
+
+	measure 'Rechazos por lleno' = SUM(FactMedicion[rechazos_por_lleno])
+		formatString: #,0
+		displayFolder: Histórico
+
+	measure '% Rechazo' = DIVIDE(SUM(FactMedicion[rechazos_por_lleno]), SUM(FactMedicion[entradas]) + SUM(FactMedicion[rechazos_por_lleno]))
+		formatString: 0.0%
+		displayFolder: Histórico
+
+	measure Lecturas = SUM(FactMedicion[total_lecturas])
+		formatString: #,0
+		displayFolder: Calidad
+
+	measure 'Lecturas con error' = SUM(FactMedicion[lecturas_error])
+		formatString: #,0
+		displayFolder: Calidad
+
+	measure '% Error de sensor' = DIVIDE(SUM(FactMedicion[lecturas_error]), SUM(FactMedicion[total_lecturas]))
+		formatString: 0.0%
+		displayFolder: Calidad
+
+	measure 'Última carga al DW' = MAX(FactMedicion[fecha_carga])
+		formatString: dd/MM/yyyy HH:mm:ss
+		displayFolder: Calidad
+
+	measure 'Texto carga DW' = "Datos tomados del DW · última carga " & FORMAT([Última carga al DW], "dd/MM/yyyy HH:mm:ss")
+		displayFolder: Calidad
+
+	measure 'SVG lead red' = VAR num = FORMAT([% Ocupación] * 100, "0.0") & " &#37;" VAR l1 = FORMAT([Ocupaciones], "#,0") & " ocupaciones y " & FORMAT([Entradas de carros], "#,0") VAR l3 = "No entr&#243; el " & FORMAT([% Rechazo] * 100, "0.0") & " &#37; de los carros." RETURN "data:image/svg+xml;utf8," & "<svg xmlns='http://www.w3.org/2000/svg' width='296' height='190' viewBox='0 0 296 190'>" & "<text x='0' y='62' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='64' fill='%23f0efec'>" & num & "</text>" & "<text x='0' y='90' font-family='Segoe UI,sans-serif' font-size='14' fill='%23c3c2b7'>ocupaci&#243;n media de los espacios</text>" & "<text x='0' y='132' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l1 & "</text>" & "<text x='0' y='151' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>entradas en el periodo elegido.</text>" & "<text x='0' y='176' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l3 & "</text></svg>"
+		dataCategory: ImageUrl
+		displayFolder: Dibujos
+
+	measure 'SVG lead congestion' = VAR num = FORMAT([Rechazos por lleno], "#,0") VAR l1 = "Son el " & FORMAT([% Rechazo] * 100, "0.0") & " &#37; de los que llegaron." VAR l2 = FORMAT([Lecturas con error], "#,0") & " lecturas de sensor salieron" VAR l3 = "con error, el " & FORMAT([% Error de sensor] * 100, "0.0") & " &#37; del total." RETURN "data:image/svg+xml;utf8," & "<svg xmlns='http://www.w3.org/2000/svg' width='296' height='190' viewBox='0 0 296 190'>" & "<text x='0' y='62' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='64' fill='%23f0efec'>" & num & "</text>" & "<text x='0' y='90' font-family='Segoe UI,sans-serif' font-size='14' fill='%23c3c2b7'>carros rechazados por estar lleno</text>" & "<text x='0' y='132' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l1 & "</text>" & "<text x='0' y='158' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l2 & "</text>" & "<text x='0' y='176' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l3 & "</text></svg>"
+		dataCategory: ImageUrl
+		displayFolder: Dibujos
+
+	partition FactMedicion = m
+		mode: directQuery
+		source =
+				let
+				    Origen = Sql.Database(Servidor, BaseDatos),
+				    Tabla = Origen{[Schema = "dbo", Item = "FactMedicion"]}[Data]
+				in
+				    Tabla
+
+	annotation PBI_ResultType = Table

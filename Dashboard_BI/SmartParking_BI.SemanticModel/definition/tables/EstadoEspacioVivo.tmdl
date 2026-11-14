@@ -1,0 +1,155 @@
+table EstadoEspacioVivo
+
+	column sk_ubicacion
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: sk_ubicacion
+
+	column codigo_parqueadero
+		dataType: string
+		summarizeBy: none
+		sourceColumn: codigo_parqueadero
+
+	column codigo_espacio
+		dataType: string
+		summarizeBy: none
+		sourceColumn: codigo_espacio
+
+	column tipo_espacio
+		dataType: string
+		summarizeBy: none
+		sourceColumn: tipo_espacio
+
+	column estado
+		dataType: string
+		summarizeBy: none
+		sourceColumn: estado
+
+	column estado_desde
+		dataType: dateTime
+		formatString: dd/MM/yyyy HH:mm:ss
+		summarizeBy: none
+		sourceColumn: estado_desde
+
+	column carro_desde
+		dataType: dateTime
+		formatString: dd/MM/yyyy HH:mm:ss
+		summarizeBy: none
+		sourceColumn: carro_desde
+
+	column distancia_cm
+		dataType: decimal
+		summarizeBy: none
+		sourceColumn: distancia_cm
+
+	column umbral_cm
+		dataType: decimal
+		summarizeBy: none
+		sourceColumn: umbral_cm
+
+	column ultima_lectura
+		dataType: dateTime
+		formatString: dd/MM/yyyy HH:mm:ss
+		summarizeBy: none
+		sourceColumn: ultima_lectura
+
+	column estado_sensor
+		dataType: string
+		summarizeBy: none
+		sourceColumn: estado_sensor
+
+	column actualizado_en
+		dataType: dateTime
+		formatString: dd/MM/yyyy HH:mm:ss
+		summarizeBy: none
+		sourceColumn: actualizado_en
+
+	measure Capacidad = COUNTROWS(EstadoEspacioVivo)
+		formatString: 0
+		displayFolder: En vivo
+
+	measure Libres = COALESCE(CALCULATE(COUNTROWS(EstadoEspacioVivo), EstadoEspacioVivo[estado] = "Libre"), 0)
+		formatString: 0
+		displayFolder: En vivo
+
+	measure Ocupados = COALESCE(CALCULATE(COUNTROWS(EstadoEspacioVivo), EstadoEspacioVivo[estado] = "Ocupado"), 0)
+		formatString: 0
+		displayFolder: En vivo
+
+	measure '% Ocupación actual' = DIVIDE([Ocupados], [Capacidad])
+		formatString: 0%
+		displayFolder: En vivo
+
+	measure 'Último reporte' = MAX(EstadoEspacioVivo[ultima_lectura])
+		formatString: dd/MM/yyyy HH:mm:ss
+		displayFolder: En vivo
+
+	measure 'Segundos sin reporte' = DATEDIFF([Último reporte], NOW(), SECOND)
+		formatString: #,0
+		displayFolder: En vivo
+
+	measure 'Conexión' = IF(ISBLANK([Último reporte]), "Sin datos", IF([Segundos sin reporte] <= 30, "En línea", "Sin señal"))
+		displayFolder: En vivo
+
+	measure 'Texto conexión' = IF([Conexión] = "En línea", "● En línea", IF([Conexión] = "Sin señal", "○ Sin señal · último dato " & FORMAT([Último reporte], "dd/MM HH:mm"), "○ Sin datos"))
+		displayFolder: En vivo
+
+	measure 'Color conexión' = IF([Conexión] = "En línea", "#0CA30C", "#FAB219")
+		displayFolder: En vivo
+
+	measure 'Estado espacio' = SELECTEDVALUE(EstadoEspacioVivo[estado], "—")
+		displayFolder: En vivo
+
+	measure 'Color espacio' = IF([Conexión] <> "En línea", "#898781", SWITCH([Estado espacio], "Libre", "#0CA30C", "Ocupado", "#D03B3B", "Fuera de servicio", "#FAB219", "#898781"))
+		displayFolder: En vivo
+
+	measure 'Detalle espacio' = VAR d = SELECTEDVALUE(EstadoEspacioVivo[distancia_cm]) VAR u = SELECTEDVALUE(EstadoEspacioVivo[ultima_lectura]) VAR desde = SELECTEDVALUE(EstadoEspacioVivo[estado_desde]) RETURN IF(ISBLANK(u), "Sin lecturas", IF([Conexión] <> "En línea", "Sin señal desde " & FORMAT(u, "dd/MM HH:mm"), "Desde " & FORMAT(desde, "HH:mm") & "  ·  " & FORMAT(d, "0.0") & " cm"))
+		displayFolder: En vivo
+
+	measure 'Estado visual E1' = VAR est = COALESCE(CALCULATE(MAX(EstadoEspacioVivo[estado]), EstadoEspacioVivo[codigo_espacio] = "E1"), "") VAR ult = CALCULATE(MAX(EstadoEspacioVivo[ultima_lectura]), EstadoEspacioVivo[codigo_espacio] = "E1") VAR sin = ISBLANK(ult) || DATEDIFF(ult, NOW(), SECOND) > 30 RETURN IF(sin, "sin", SWITCH(est, "Libre", "libre", "Ocupado", "ocupado", "Fuera de servicio", "fuera", "sin"))
+		displayFolder: Auxiliares
+
+	measure 'Estado visual E2' = VAR est = COALESCE(CALCULATE(MAX(EstadoEspacioVivo[estado]), EstadoEspacioVivo[codigo_espacio] = "E2"), "") VAR ult = CALCULATE(MAX(EstadoEspacioVivo[ultima_lectura]), EstadoEspacioVivo[codigo_espacio] = "E2") VAR sin = ISBLANK(ult) || DATEDIFF(ult, NOW(), SECOND) > 30 RETURN IF(sin, "sin", SWITCH(est, "Libre", "libre", "Ocupado", "ocupado", "Fuera de servicio", "fuera", "sin"))
+		displayFolder: Auxiliares
+
+	measure 'Estado visual E3' = VAR est = COALESCE(CALCULATE(MAX(EstadoEspacioVivo[estado]), EstadoEspacioVivo[codigo_espacio] = "E3"), "") VAR ult = CALCULATE(MAX(EstadoEspacioVivo[ultima_lectura]), EstadoEspacioVivo[codigo_espacio] = "E3") VAR sin = ISBLANK(ult) || DATEDIFF(ult, NOW(), SECOND) > 30 RETURN IF(sin, "sin", SWITCH(est, "Libre", "libre", "Ocupado", "ocupado", "Fuera de servicio", "fuera", "sin"))
+		displayFolder: Auxiliares
+
+	measure 'Estado visual E4' = VAR est = COALESCE(CALCULATE(MAX(EstadoEspacioVivo[estado]), EstadoEspacioVivo[codigo_espacio] = "E4"), "") VAR ult = CALCULATE(MAX(EstadoEspacioVivo[ultima_lectura]), EstadoEspacioVivo[codigo_espacio] = "E4") VAR sin = ISBLANK(ult) || DATEDIFF(ult, NOW(), SECOND) > 30 RETURN IF(sin, "sin", SWITCH(est, "Libre", "libre", "Ocupado", "ocupado", "Fuera de servicio", "fuera", "sin"))
+		displayFolder: Auxiliares
+
+	measure 'SVG bay E1' = VAR s = [Estado visual E1] VAR est = COALESCE(CALCULATE(MAX(EstadoEspacioVivo[estado]), EstadoEspacioVivo[codigo_espacio] = "E1"), "") VAR dist = CALCULATE(MAX(EstadoEspacioVivo[distancia_cm]), EstadoEspacioVivo[codigo_espacio] = "E1") VAR desde = CALCULATE(MAX(EstadoEspacioVivo[estado_desde]), EstadoEspacioVivo[codigo_espacio] = "E1") VAR ult = CALCULATE(MAX(EstadoEspacioVivo[ultima_lectura]), EstadoEspacioVivo[codigo_espacio] = "E1") VAR txtDist = IF(ISBLANK(dist), "Sin lectura", FORMAT(dist, "0.0") & " cm") VAR txtDesde = SWITCH(s, "ocupado", "Ocupado desde " & FORMAT(desde, "HH:mm"), "libre", "Libre desde " & FORMAT(desde, "HH:mm"), IF(ISBLANK(ult), "Sin lecturas", "Ultimo dato " & FORMAT(ult, "dd/MM HH:mm"))) VAR txtEstado = SWITCH(s, "ocupado", "Ocupado", "libre", "Libre", "fuera", "Fuera de servicio", "Sin se&#241;al") VAR carOp = IF(s = "ocupado", "0.78", IF(s = "sin" && est = "Ocupado", "0.3", "0")) RETURN "<g transform='translate(36 28)'>" & "<path d='M76 18 L138 190 L14 190 Z' fill='%233987e5' opacity='" & IF(s = "sin", "0.05", "0.16") & "'/>" & "<rect x='0' y='0' width='152' height='270' rx='3' stroke-width='1.5' fill='" & SWITCH(s, "libre", "%23113322", "ocupado", "%233a1a1f", "fuera", "%23382b0e", "none") & "' stroke='" & SWITCH(s, "libre", "%2325b04a", "ocupado", "%23e25555", "fuera", "%23fab219", "%23898781") & "'/>" & "<rect x='62' y='0' width='28' height='9' rx='1.5' fill='%23c3c2b7'/><circle cx='70' cy='4.5' r='2.6' fill='%2310151c'/><circle cx='82' cy='4.5' r='2.6' fill='%2310151c'/>" & "<g opacity='" & carOp & "'><rect x='42' y='74' width='68' height='128' rx='16' fill='%23e25555'/><rect x='50' y='94' width='52' height='28' rx='6' fill='%2310151c' opacity='0.55'/><rect x='50' y='158' width='52' height='24' rx='6' fill='%2310151c' opacity='0.55'/></g>" & "<text x='14' y='32' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='20' fill='%23f0efec'>E1</text><text x='14' y='48' font-family='Segoe UI,sans-serif' font-size='11.5' fill='%23a3a29b'>General</text>" & "<text x='14' y='240' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='17' fill='%23f0efec'>" & txtDist & "</text>" & "<text x='138' y='240' font-family='Segoe UI,sans-serif' font-size='12' fill='%23c3c2b7' text-anchor='end'>" & txtEstado & "</text>" & "<text x='14' y='258' font-family='Segoe UI,sans-serif' font-size='11.5' fill='%23a3a29b'>" & txtDesde & "</text>" & "</g>"
+		displayFolder: Auxiliares
+
+	measure 'SVG bay E2' = VAR s = [Estado visual E2] VAR est = COALESCE(CALCULATE(MAX(EstadoEspacioVivo[estado]), EstadoEspacioVivo[codigo_espacio] = "E2"), "") VAR dist = CALCULATE(MAX(EstadoEspacioVivo[distancia_cm]), EstadoEspacioVivo[codigo_espacio] = "E2") VAR desde = CALCULATE(MAX(EstadoEspacioVivo[estado_desde]), EstadoEspacioVivo[codigo_espacio] = "E2") VAR ult = CALCULATE(MAX(EstadoEspacioVivo[ultima_lectura]), EstadoEspacioVivo[codigo_espacio] = "E2") VAR txtDist = IF(ISBLANK(dist), "Sin lectura", FORMAT(dist, "0.0") & " cm") VAR txtDesde = SWITCH(s, "ocupado", "Ocupado desde " & FORMAT(desde, "HH:mm"), "libre", "Libre desde " & FORMAT(desde, "HH:mm"), IF(ISBLANK(ult), "Sin lecturas", "Ultimo dato " & FORMAT(ult, "dd/MM HH:mm"))) VAR txtEstado = SWITCH(s, "ocupado", "Ocupado", "libre", "Libre", "fuera", "Fuera de servicio", "Sin se&#241;al") VAR carOp = IF(s = "ocupado", "0.78", IF(s = "sin" && est = "Ocupado", "0.3", "0")) RETURN "<g transform='translate(208 28)'>" & "<path d='M76 18 L138 190 L14 190 Z' fill='%233987e5' opacity='" & IF(s = "sin", "0.05", "0.16") & "'/>" & "<rect x='0' y='0' width='152' height='270' rx='3' stroke-width='1.5' fill='" & SWITCH(s, "libre", "%23113322", "ocupado", "%233a1a1f", "fuera", "%23382b0e", "none") & "' stroke='" & SWITCH(s, "libre", "%2325b04a", "ocupado", "%23e25555", "fuera", "%23fab219", "%23898781") & "'/>" & "<rect x='62' y='0' width='28' height='9' rx='1.5' fill='%23c3c2b7'/><circle cx='70' cy='4.5' r='2.6' fill='%2310151c'/><circle cx='82' cy='4.5' r='2.6' fill='%2310151c'/>" & "<g opacity='" & carOp & "'><rect x='42' y='74' width='68' height='128' rx='16' fill='%23e25555'/><rect x='50' y='94' width='52' height='28' rx='6' fill='%2310151c' opacity='0.55'/><rect x='50' y='158' width='52' height='24' rx='6' fill='%2310151c' opacity='0.55'/></g>" & "<text x='14' y='32' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='20' fill='%23f0efec'>E2</text><text x='14' y='48' font-family='Segoe UI,sans-serif' font-size='11.5' fill='%23a3a29b'>General</text>" & "<text x='14' y='240' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='17' fill='%23f0efec'>" & txtDist & "</text>" & "<text x='138' y='240' font-family='Segoe UI,sans-serif' font-size='12' fill='%23c3c2b7' text-anchor='end'>" & txtEstado & "</text>" & "<text x='14' y='258' font-family='Segoe UI,sans-serif' font-size='11.5' fill='%23a3a29b'>" & txtDesde & "</text>" & "</g>"
+		displayFolder: Auxiliares
+
+	measure 'SVG bay E3' = VAR s = [Estado visual E3] VAR est = COALESCE(CALCULATE(MAX(EstadoEspacioVivo[estado]), EstadoEspacioVivo[codigo_espacio] = "E3"), "") VAR dist = CALCULATE(MAX(EstadoEspacioVivo[distancia_cm]), EstadoEspacioVivo[codigo_espacio] = "E3") VAR desde = CALCULATE(MAX(EstadoEspacioVivo[estado_desde]), EstadoEspacioVivo[codigo_espacio] = "E3") VAR ult = CALCULATE(MAX(EstadoEspacioVivo[ultima_lectura]), EstadoEspacioVivo[codigo_espacio] = "E3") VAR txtDist = IF(ISBLANK(dist), "Sin lectura", FORMAT(dist, "0.0") & " cm") VAR txtDesde = SWITCH(s, "ocupado", "Ocupado desde " & FORMAT(desde, "HH:mm"), "libre", "Libre desde " & FORMAT(desde, "HH:mm"), IF(ISBLANK(ult), "Sin lecturas", "Ultimo dato " & FORMAT(ult, "dd/MM HH:mm"))) VAR txtEstado = SWITCH(s, "ocupado", "Ocupado", "libre", "Libre", "fuera", "Fuera de servicio", "Sin se&#241;al") VAR carOp = IF(s = "ocupado", "0.78", IF(s = "sin" && est = "Ocupado", "0.3", "0")) RETURN "<g transform='translate(380 28)'>" & "<path d='M76 18 L138 190 L14 190 Z' fill='%233987e5' opacity='" & IF(s = "sin", "0.05", "0.16") & "'/>" & "<rect x='0' y='0' width='152' height='270' rx='3' stroke-width='1.5' fill='" & SWITCH(s, "libre", "%23113322", "ocupado", "%233a1a1f", "fuera", "%23382b0e", "none") & "' stroke='" & SWITCH(s, "libre", "%2325b04a", "ocupado", "%23e25555", "fuera", "%23fab219", "%23898781") & "'/>" & "<rect x='62' y='0' width='28' height='9' rx='1.5' fill='%23c3c2b7'/><circle cx='70' cy='4.5' r='2.6' fill='%2310151c'/><circle cx='82' cy='4.5' r='2.6' fill='%2310151c'/>" & "<g opacity='" & carOp & "'><rect x='42' y='74' width='68' height='128' rx='16' fill='%23e25555'/><rect x='50' y='94' width='52' height='28' rx='6' fill='%2310151c' opacity='0.55'/><rect x='50' y='158' width='52' height='24' rx='6' fill='%2310151c' opacity='0.55'/></g>" & "<text x='14' y='32' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='20' fill='%23f0efec'>E3</text><text x='14' y='48' font-family='Segoe UI,sans-serif' font-size='11.5' fill='%23a3a29b'>General</text>" & "<text x='14' y='240' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='17' fill='%23f0efec'>" & txtDist & "</text>" & "<text x='138' y='240' font-family='Segoe UI,sans-serif' font-size='12' fill='%23c3c2b7' text-anchor='end'>" & txtEstado & "</text>" & "<text x='14' y='258' font-family='Segoe UI,sans-serif' font-size='11.5' fill='%23a3a29b'>" & txtDesde & "</text>" & "</g>"
+		displayFolder: Auxiliares
+
+	measure 'SVG bay E4' = VAR s = [Estado visual E4] VAR est = COALESCE(CALCULATE(MAX(EstadoEspacioVivo[estado]), EstadoEspacioVivo[codigo_espacio] = "E4"), "") VAR dist = CALCULATE(MAX(EstadoEspacioVivo[distancia_cm]), EstadoEspacioVivo[codigo_espacio] = "E4") VAR desde = CALCULATE(MAX(EstadoEspacioVivo[estado_desde]), EstadoEspacioVivo[codigo_espacio] = "E4") VAR ult = CALCULATE(MAX(EstadoEspacioVivo[ultima_lectura]), EstadoEspacioVivo[codigo_espacio] = "E4") VAR txtDist = IF(ISBLANK(dist), "Sin lectura", FORMAT(dist, "0.0") & " cm") VAR txtDesde = SWITCH(s, "ocupado", "Ocupado desde " & FORMAT(desde, "HH:mm"), "libre", "Libre desde " & FORMAT(desde, "HH:mm"), IF(ISBLANK(ult), "Sin lecturas", "Ultimo dato " & FORMAT(ult, "dd/MM HH:mm"))) VAR txtEstado = SWITCH(s, "ocupado", "Ocupado", "libre", "Libre", "fuera", "Fuera de servicio", "Sin se&#241;al") VAR carOp = IF(s = "ocupado", "0.78", IF(s = "sin" && est = "Ocupado", "0.3", "0")) RETURN "<g transform='translate(552 28)'>" & "<path d='M76 18 L138 190 L14 190 Z' fill='%233987e5' opacity='" & IF(s = "sin", "0.05", "0.16") & "'/>" & "<rect x='0' y='0' width='152' height='270' rx='3' stroke-width='1.5' fill='" & SWITCH(s, "libre", "%23113322", "ocupado", "%233a1a1f", "fuera", "%23382b0e", "none") & "' stroke='" & SWITCH(s, "libre", "%2325b04a", "ocupado", "%23e25555", "fuera", "%23fab219", "%23898781") & "'/>" & "<rect x='62' y='0' width='28' height='9' rx='1.5' fill='%23c3c2b7'/><circle cx='70' cy='4.5' r='2.6' fill='%2310151c'/><circle cx='82' cy='4.5' r='2.6' fill='%2310151c'/>" & "<g opacity='" & carOp & "'><rect x='42' y='74' width='68' height='128' rx='16' fill='%23e25555'/><rect x='50' y='94' width='52' height='28' rx='6' fill='%2310151c' opacity='0.55'/><rect x='50' y='158' width='52' height='24' rx='6' fill='%2310151c' opacity='0.55'/></g>" & "<text x='14' y='32' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='20' fill='%23f0efec'>E4</text><text x='14' y='48' font-family='Segoe UI,sans-serif' font-size='11.5' fill='%23a3a29b'>Preferencial</text><g transform='translate(122 22)' fill='none' stroke='%23c3c2b7' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='7' cy='3' r='2.2'/><path d='M7 7v7h6l2.5 5M7 10h6'/><path d='M4 12a6 6 0 1 0 8 7'/></g>" & "<text x='14' y='240' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='17' fill='%23f0efec'>" & txtDist & "</text>" & "<text x='138' y='240' font-family='Segoe UI,sans-serif' font-size='12' fill='%23c3c2b7' text-anchor='end'>" & txtEstado & "</text>" & "<text x='14' y='258' font-family='Segoe UI,sans-serif' font-size='11.5' fill='%23a3a29b'>" & txtDesde & "</text>" & "</g>"
+		displayFolder: Auxiliares
+
+	measure 'SVG plano' = "data:image/svg+xml;utf8," & "<svg xmlns='http://www.w3.org/2000/svg' width='760' height='540' viewBox='0 0 760 540'><rect x='0' y='452' width='760' height='88' rx='3' fill='%23161d27'/><line x1='16' y1='508' x2='744' y2='508' stroke='%233a4553' stroke-width='2' stroke-dasharray='14 12'/><text x='20' y='478' font-family='Segoe UI,sans-serif' font-size='12' fill='%23a3a29b'>Calle</text><rect x='12' y='8' width='736' height='432' rx='3' fill='none' stroke='%23c3c2b7' stroke-width='1.5'/><path d='M12 440h538M706 440h42' stroke='%23c3c2b7' stroke-width='4'/><text x='628' y='470' font-family='Segoe UI,sans-serif' font-size='12' fill='%23a3a29b' text-anchor='middle'>Entrada</text>" & [SVG bay E1] & [SVG bay E2] & [SVG bay E3] & [SVG bay E4] & "<circle cx='696' cy='440' r='6' fill='%23c3c2b7'/><rect x='560' y='436' width='136' height='7' rx='1.5' fill='%2310151c' stroke='%23c3c2b7' stroke-width='1'/><rect x='566' y='436' width='16' height='7' fill='%23e25555'/><rect x='602' y='436' width='16' height='7' fill='%23e25555'/><rect x='638' y='436' width='16' height='7' fill='%23e25555'/><text x='696' y='424' font-family='Segoe UI,sans-serif' font-size='12' fill='%23c3c2b7' text-anchor='end'>Talanquera</text><circle cx='628' cy='500' r='6' fill='none' stroke='%233987e5' stroke-width='1.75'/><path d='M616 492a16 16 0 0 1 24 0' fill='none' stroke='%233987e5' stroke-width='1.75' stroke-linecap='round' opacity='0.6'/><text x='610' y='504' font-family='Segoe UI,sans-serif' font-size='12' fill='%23c3c2b7' text-anchor='end'>FC-51, lado calle</text><circle cx='628' cy='400' r='6' fill='none' stroke='%233987e5' stroke-width='1.75'/><path d='M616 408a16 16 0 0 0 24 0' fill='none' stroke='%233987e5' stroke-width='1.75' stroke-linecap='round' opacity='0.6'/><text x='610' y='404' font-family='Segoe UI,sans-serif' font-size='12' fill='%23c3c2b7' text-anchor='end'>TCRT5000, lado parqueadero</text><text x='36' y='404' font-family='Segoe UI,sans-serif' font-size='12' fill='%23a3a29b'>Circulaci&#243;n interna</text><text x='36' y='424' font-family='Segoe UI,sans-serif' font-size='11.5' fill='%23a3a29b'>Un espacio cuenta como ocupado cuando su sensor mide menos de 6 cm.</text></svg>"
+		dataCategory: ImageUrl
+		displayFolder: Dibujos
+
+	measure 'SVG cifra libres' = VAR s1 = [Estado visual E1] VAR s2 = [Estado visual E2] VAR s3 = [Estado visual E3] VAR s4 = [Estado visual E4] VAR libres = IF(s1 = "libre", 1, 0) + IF(s2 = "libre", 1, 0) + IF(s3 = "libre", 1, 0) + IF(s4 = "libre", 1, 0) VAR nsin = IF(s1 = "sin", 1, 0) + IF(s2 = "sin", 1, 0) + IF(s3 = "sin", 1, 0) + IF(s4 = "sin", 1, 0) VAR todoSin = nsin = 4 VAR numero = IF(todoSin, "-", FORMAT(libres, "0")) VAR sub = IF(todoSin, "sin datos recientes", IF(libres = 1, "espacio libre de 4", "espacios libres de 4")) VAR pie = IF(todoSin, "<circle cx='6' cy='96' r='4.5' fill='none' stroke='%23fab219' stroke-width='2'/><text x='20' y='100' font-family='Segoe UI,sans-serif' font-size='12.5' fill='%23f0efec'>No llegan lecturas.</text><text x='20' y='116' font-family='Segoe UI,sans-serif' font-size='12.5' fill='%23c3c2b7'>Revise maqueta, puente e Iniciar_TiempoReal.</text>", IF(libres = 0, "<text x='0' y='100' font-family='Segoe UI,sans-serif' font-size='12.5' fill='%23f0efec'>Parqueadero lleno.</text><text x='0' y='116' font-family='Segoe UI,sans-serif' font-size='12.5' fill='%23c3c2b7'>Los carros que lleguen quedar&#225;n como rechazo por lleno.</text>", "")) RETURN "data:image/svg+xml;utf8," & "<svg xmlns='http://www.w3.org/2000/svg' width='356' height='120' viewBox='0 0 356 120'>" & "<text x='0' y='82' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='84' fill='%23f0efec'>" & numero & "</text>" & "<text x='62' y='78' font-family='Segoe UI,sans-serif' font-size='16' fill='%23c3c2b7'>" & sub & "</text>" & pie & "</svg>"
+		dataCategory: ImageUrl
+		displayFolder: Dibujos
+
+	measure 'SVG conexion' = VAR ult = MAX(EstadoEspacioVivo[ultima_lectura]) VAR estado = IF(ISBLANK(ult), "datos", IF(DATEDIFF(ult, NOW(), SECOND) <= 30, "linea", "senal")) VAR texto = SWITCH(estado, "linea", "En l&#237;nea", "senal", "Sin se&#241;al. &#218;ltimo dato " & FORMAT(ult, "dd/MM HH:mm"), "Sin datos") VAR icono = IF(estado = "linea", "<circle cx='9' cy='13' r='5' fill='%2325b04a'/>", "<circle cx='9' cy='13' r='4.5' fill='none' stroke='%23fab219' stroke-width='2'/>") RETURN "data:image/svg+xml;utf8," & "<svg xmlns='http://www.w3.org/2000/svg' width='316' height='26' viewBox='0 0 316 26'>" & icono & "<text x='24' y='18' font-family='Segoe UI,sans-serif' font-size='14' fill='%23f0efec'>" & texto & "</text></svg>"
+		dataCategory: ImageUrl
+		displayFolder: Dibujos
+
+	partition EstadoEspacioVivo = m
+		mode: directQuery
+		source =
+				let
+				    Origen = Sql.Database(Servidor, BaseDatos),
+				    Tabla = Origen{[Schema = "dbo", Item = "EstadoEspacioVivo"]}[Data]
+				in
+				    Tabla
+
+	annotation PBI_ResultType = Table

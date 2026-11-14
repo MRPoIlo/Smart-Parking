@@ -1,0 +1,231 @@
+table FactMedicion
+	lineageTag: 31df0bbe-7137-4110-bfc5-0b5ac0dcd74c
+
+	measure Ocupaciones = SUM(FactMedicion[ocupaciones_iniciadas])
+		formatString: #,0
+		displayFolder: Histórico
+		lineageTag: ee94bea9-1738-44ca-88bc-b3a611ab2555
+
+	measure '% Ocupación' = DIVIDE(SUM(FactMedicion[lecturas_ocupado]), CALCULATE(SUM(FactMedicion[lecturas_validas]), DimSensor[modelo] = "HC-SR04"))
+		formatString: 0.0%
+		displayFolder: Histórico
+		lineageTag: c016154f-39a5-49f6-b94b-769b0d667dfe
+
+	measure 'Entradas de carros' = SUM(FactMedicion[entradas])
+		formatString: #,0
+		displayFolder: Histórico
+		lineageTag: 4659b830-ff8f-4147-8a8b-1968dd123077
+
+	measure 'Rechazos por lleno' = SUM(FactMedicion[rechazos_por_lleno])
+		formatString: #,0
+		displayFolder: Histórico
+		lineageTag: 97393203-3bc8-4eeb-a2e7-3a6ea2693a3a
+
+	measure '% Rechazo' = DIVIDE(SUM(FactMedicion[rechazos_por_lleno]), SUM(FactMedicion[entradas]) + SUM(FactMedicion[rechazos_por_lleno]))
+		formatString: 0.0%
+		displayFolder: Histórico
+		lineageTag: cfa2dbba-6e15-42cd-9183-91a8247b9655
+
+	measure Lecturas = SUM(FactMedicion[total_lecturas])
+		formatString: #,0
+		displayFolder: Calidad
+		lineageTag: 02abb43b-e21b-4552-aa0a-354a84dbe3df
+
+	measure 'Lecturas con error' = SUM(FactMedicion[lecturas_error])
+		formatString: #,0
+		displayFolder: Calidad
+		lineageTag: eb51c824-2bea-4b6a-b789-c47600a44135
+
+	measure '% Error de sensor' = DIVIDE(SUM(FactMedicion[lecturas_error]), SUM(FactMedicion[total_lecturas]))
+		formatString: 0.0%
+		displayFolder: Calidad
+		lineageTag: 3a53b4a8-6ab4-4997-a105-f24bc63ddd3f
+
+	measure 'Última carga al DW' = MAX(FactMedicion[fecha_carga])
+		formatString: dd/MM/yyyy HH:mm:ss
+		displayFolder: Calidad
+		lineageTag: aa5ce762-43ba-40b8-ab0f-7697fabafff3
+
+	measure 'Texto carga DW' = "Datos tomados del DW · última carga " & FORMAT([Última carga al DW], "dd/MM/yyyy HH:mm:ss")
+		displayFolder: Calidad
+		lineageTag: 65e9de5d-0f58-467b-a11b-a949432ef8c5
+
+	measure 'SVG lead red' = VAR num = FORMAT([% Ocupación] * 100, "0.0") & " &#37;" VAR l1 = FORMAT([Ocupaciones], "#,0") & " ocupaciones y " & FORMAT([Entradas de carros], "#,0") VAR l3 = "No entr&#243; el " & FORMAT([% Rechazo] * 100, "0.0") & " &#37; de los carros." RETURN "data:image/svg+xml;utf8," & "<svg xmlns='http://www.w3.org/2000/svg' width='296' height='190' viewBox='0 0 296 190'>" & "<text x='0' y='62' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='64' fill='%23f0efec'>" & num & "</text>" & "<text x='0' y='90' font-family='Segoe UI,sans-serif' font-size='14' fill='%23c3c2b7'>ocupaci&#243;n media de los espacios</text>" & "<text x='0' y='132' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l1 & "</text>" & "<text x='0' y='151' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>entradas en el periodo elegido.</text>" & "<text x='0' y='176' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l3 & "</text></svg>"
+		displayFolder: Dibujos
+		lineageTag: f1912a70-6f23-44fb-9ae6-fa93896ac6b2
+		dataCategory: ImageUrl
+
+	measure 'SVG lead congestion' = VAR num = FORMAT([Rechazos por lleno], "#,0") VAR l1 = "Son el " & FORMAT([% Rechazo] * 100, "0.0") & " &#37; de los que llegaron." VAR l2 = FORMAT([Lecturas con error], "#,0") & " lecturas de sensor salieron" VAR l3 = "con error, el " & FORMAT([% Error de sensor] * 100, "0.0") & " &#37; del total." RETURN "data:image/svg+xml;utf8," & "<svg xmlns='http://www.w3.org/2000/svg' width='296' height='190' viewBox='0 0 296 190'>" & "<text x='0' y='62' font-family='Bahnschrift SemiBold,Bahnschrift,Segoe UI,sans-serif' font-size='64' fill='%23f0efec'>" & num & "</text>" & "<text x='0' y='90' font-family='Segoe UI,sans-serif' font-size='14' fill='%23c3c2b7'>carros rechazados por estar lleno</text>" & "<text x='0' y='132' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l1 & "</text>" & "<text x='0' y='158' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l2 & "</text>" & "<text x='0' y='176' font-family='Segoe UI,sans-serif' font-size='13' fill='%23c3c2b7'>" & l3 & "</text></svg>"
+		displayFolder: Dibujos
+		lineageTag: 4c163d46-1a58-4707-8b1a-e587b60571e1
+		dataCategory: ImageUrl
+
+	column sk_fecha
+		dataType: int64
+		isHidden
+		lineageTag: 09f745ed-827b-4ef0-bc68-a6e65b00e1f1
+		summarizeBy: none
+		sourceColumn: sk_fecha
+
+	column sk_hora
+		dataType: int64
+		isHidden
+		lineageTag: ac162d54-4e67-4f66-863a-8110f2fda1ca
+		summarizeBy: none
+		sourceColumn: sk_hora
+
+	column sk_sensor
+		dataType: int64
+		isHidden
+		lineageTag: 9006af8d-f3c7-478a-92a6-6903278df41c
+		summarizeBy: none
+		sourceColumn: sk_sensor
+
+	column sk_ubicacion
+		dataType: int64
+		isHidden
+		lineageTag: d3b708cb-d96e-4da7-93d7-cf1f7a2af796
+		summarizeBy: none
+		sourceColumn: sk_ubicacion
+
+	column total_lecturas
+		dataType: int64
+		isHidden
+		lineageTag: a5774761-f8ac-453f-a831-ed150b140e66
+		summarizeBy: sum
+		sourceColumn: total_lecturas
+
+	column lecturas_validas
+		dataType: int64
+		isHidden
+		lineageTag: 8ab4d603-2e1b-4df8-b479-142d20d72038
+		summarizeBy: sum
+		sourceColumn: lecturas_validas
+
+	column lecturas_error
+		dataType: int64
+		isHidden
+		lineageTag: b8045246-497c-46cc-b250-6ef94feedf38
+		summarizeBy: sum
+		sourceColumn: lecturas_error
+
+	column suma_valor
+		dataType: double
+		isHidden
+		lineageTag: 72d9eb5d-6cda-48b1-8227-35eec32f541d
+		summarizeBy: sum
+		sourceColumn: suma_valor
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column valor_promedio
+		dataType: double
+		isHidden
+		lineageTag: 2bdd79c4-2fcd-4c37-bf6c-925ebc4b484b
+		summarizeBy: sum
+		sourceColumn: valor_promedio
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column valor_minimo
+		dataType: double
+		isHidden
+		lineageTag: c0ee96ad-2d70-4049-bff4-44b424ead5d8
+		summarizeBy: sum
+		sourceColumn: valor_minimo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column valor_maximo
+		dataType: double
+		isHidden
+		lineageTag: 1d12d2f1-7e68-4ae2-93c8-b7c1c85a2d73
+		summarizeBy: sum
+		sourceColumn: valor_maximo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column lecturas_ocupado
+		dataType: int64
+		isHidden
+		lineageTag: ebc2185f-2e43-4b98-9d5d-ba1a7577292c
+		summarizeBy: sum
+		sourceColumn: lecturas_ocupado
+
+	column pct_ocupacion
+		dataType: double
+		isHidden
+		lineageTag: 82e5fa46-6fab-4b96-81c8-084f066786ca
+		summarizeBy: sum
+		sourceColumn: pct_ocupacion
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column detecciones
+		dataType: int64
+		isHidden
+		lineageTag: 6fece7f6-104c-47ed-a17d-d08bcd8f27b3
+		summarizeBy: sum
+		sourceColumn: detecciones
+
+	column lecturas_baja_luz
+		dataType: int64
+		isHidden
+		lineageTag: 42d1f939-9395-4043-b712-fb203cbae66f
+		summarizeBy: sum
+		sourceColumn: lecturas_baja_luz
+
+	column ocupaciones_iniciadas
+		dataType: int64
+		isHidden
+		lineageTag: 2a2c5694-ff30-445e-978f-42b2c225aa6d
+		summarizeBy: sum
+		sourceColumn: ocupaciones_iniciadas
+
+	column entradas
+		dataType: int64
+		isHidden
+		lineageTag: 0244f7e1-ac14-407c-a6f2-d00746526062
+		summarizeBy: sum
+		sourceColumn: entradas
+
+	column rechazos_por_lleno
+		dataType: int64
+		isHidden
+		lineageTag: 0d8b5b33-9591-47e7-b0a6-aca92671b602
+		summarizeBy: sum
+		sourceColumn: rechazos_por_lleno
+
+	column id_ejecucion
+		dataType: int64
+		isHidden
+		lineageTag: 2b669d08-5e0e-46a8-957b-46a516434452
+		summarizeBy: none
+		sourceColumn: id_ejecucion
+
+	column fecha_carga
+		dataType: dateTime
+		isHidden
+		lineageTag: 1f9403dd-58ad-4de7-80b6-cc3e1805a528
+		summarizeBy: none
+		sourceColumn: fecha_carga
+
+	partition FactMedicion = m
+		mode: import
+		source =
+				let
+				    Origen = Sql.Database(Servidor, BaseDatos),
+				    Tabla = Origen{[Schema = "dbo", Item = "FactMedicion"]}[Data]
+				in
+				    Tabla
+
+	annotation PBI_ResultType = Table
+

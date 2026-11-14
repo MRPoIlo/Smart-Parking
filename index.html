@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Parking, proyecto de gestión del conocimiento</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="marca" href="#inicio">Smart Parking</a>
+  <nav id="menu">
+    <a href="#identificacion">Proyecto</a>
+    <a href="#problema">Problema</a>
+    <a href="#metodologia">Metodología</a>
+    <a href="#solucion">Solución</a>
+    <a href="#datos">Datos</a>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#envivo">En vivo</a>
+    <a href="#conocimientos">Conocimientos</a>
+    <a href="#decisiones">Decisiones</a>
+    <a href="#conclusiones">Conclusiones</a>
+  </nav>
+</header>
+
+<main>
+
+<section id="inicio" class="portada">
+  <p class="pequeno">Universidad de Cundinamarca, Ingeniería de Software, grupo 701N</p>
+  <h1>Smart Parking</h1>
+  <p class="lead">Un parqueadero de maqueta que mide cuántos espacios hay libres, abre solo la talanquera y manda todo a una base de datos para analizarlo.</p>
+  <p class="lead">En esta página está la documentación del proyecto, el dashboard de Power BI y lo que encontramos al analizar un millón de mediciones.</p>
+</section>
+
+<section id="identificacion">
+  <h2>1. Identificación del proyecto</h2>
+  <table class="ficha">
+    <tr><th>Título</th><td>Smart Parking: gestión inteligente de parqueaderos para una ciudad inteligente</td></tr>
+    <tr><th>Programa académico</th><td>Ingeniería de Software</td></tr>
+    <tr><th>Sede</th><td>Universidad de Cundinamarca</td></tr>
+    <tr><th>Ciclo de formación</th><td>Grupo 701N, módulo de ciudad inteligente (Big Data)</td></tr>
+    <tr><th>Integrantes</th><td>Duvan Lozano, David Sanchez y Wilder Ortiz</td></tr>
+    <tr><th>Tipo de proyecto</th><td>Proyecto de aula de IoT con enfoque en Big Data. Es un subsistema dentro de una maqueta de ciudad de 100 x 60 cm.</td></tr>
+  </table>
+</section>
+
+<section id="problema">
+  <h2>2. Planteamiento del problema</h2>
+  <p>En las ciudades grandes mucha gente da vueltas buscando dónde parquear. Eso gasta tiempo y combustible y llena las calles de carros. El conductor no sabe si el parqueadero tiene cupo hasta que llega, y al administrador le pasa algo parecido: no sabe cuándo se llena, a qué horas rechaza carros ni si sus sensores están fallando.</p>
+  <p>Nuestro módulo trata de resolver eso en pequeño. Un parqueadero de cuatro espacios mide en tiempo real qué espacio está ocupado, deja entrar solo si hay cupo y guarda cada lectura para después poder analizarla.</p>
+
+  <h2>3. Justificación</h2>
+  <p>Los beneficiados son los conductores, que pierden menos tiempo buscando, y los administradores, que pueden decidir con datos y no a ojo. También sirve a la ciudad, porque menos carros dando vueltas es menos tráfico.</p>
+  <p>La solución es pertinente porque usa sensores baratos, comunicación por MQTT y una base de datos, que son piezas que se pueden repetir en más parqueaderos. La maqueta tiene solo cuatro espacios, así que el volumen grande de datos es simulado, y eso lo decimos claro más abajo.</p>
+
+  <h2>4. Objetivos</h2>
+  <p><strong>Objetivo general.</strong> Construir un prototipo de parqueadero inteligente que registre su ocupación en una base de datos y permita analizar su comportamiento con un dashboard.</p>
+  <ul>
+    <li>Medir la ocupación de cuatro espacios con sensores ultrasónicos y mostrarla con LEDs.</li>
+    <li>Controlar una talanquera que abra solo cuando haya cupo.</li>
+    <li>Guardar las lecturas en SQL Server mediante MQTT y un puente en Python.</li>
+    <li>Simular más de un millón de mediciones para analizar el comportamiento de cinco parqueaderos.</li>
+    <li>Cargar un Data Warehouse con SSIS y analizarlo en Power BI.</li>
+    <li>Sacar conocimientos y decisiones que se sostengan con los datos.</li>
+  </ul>
+
+  <h2>5. Marco referencial</h2>
+  <p>Para el proyecto nos apoyamos en estas fuentes en español. Las usamos para entender el protocolo de mensajes, el modelo de la base de datos y la herramienta del dashboard.</p>
+  <ul class="refs">
+    <li><a href="https://learn.microsoft.com/es-es/power-bi/fundamentals/power-bi-overview" target="_blank" rel="noopener">Microsoft Learn: ¿Qué es Power BI?</a></li>
+    <li><a href="https://learn.microsoft.com/es-es/power-bi/connect-data/desktop-directquery-about" target="_blank" rel="noopener">Microsoft Learn: Modo DirectQuery en Power BI Desktop</a></li>
+    <li><a href="https://learn.microsoft.com/es-es/sql/integration-services/sql-server-integration-services" target="_blank" rel="noopener">Microsoft Learn: SQL Server Integration Services</a></li>
+    <li><a href="https://learn.microsoft.com/es-es/power-bi/collaborate-share/service-publish-to-web" target="_blank" rel="noopener">Microsoft Learn: Publicar en la web desde Power BI</a></li>
+  </ul>
+  <p class="nota">Antes de entregar hay que abrir cada enlace y comprobar que cargue su página, como pide el profesor.</p>
+</section>
+
+<section id="metodologia">
+  <h2>6. Metodología y cronograma (CRISP-DM)</h2>
+  <p>Seguimos las seis fases de CRISP-DM. No fue una línea recta: varias veces volvimos a una fase anterior, por ejemplo al calibrar sensores después de ver lecturas raras.</p>
+  <table class="datos">
+    <thead><tr><th>Fase</th><th>Qué hicimos</th><th>Evidencia</th></tr></thead>
+    <tbody>
+      <tr><td>Comprensión del negocio</td><td>Definimos el problema del cupo y la pregunta de cuándo se llenan los parqueaderos.</td><td>Secciones 2 a 4 de esta página</td></tr>
+      <tr><td>Comprensión de los datos</td><td>Revisamos qué mide cada sensor y qué tablas guarda la base de datos.</td><td>Modelo relacional de 17 tablas</td></tr>
+      <tr><td>Preparación de los datos</td><td>Simulamos 90 días de datos para 5 parqueaderos y los pasamos a un modelo en estrella con SSIS.</td><td>Paquete SSIS y Data Warehouse</td></tr>
+      <tr><td>Modelado</td><td>Hicimos las medidas del dashboard y los cruces de análisis de una, dos y tres variables.</td><td>Proyecto de Power BI (.pbip)</td></tr>
+      <tr><td>Evaluación</td><td>Comparamos cada hallazgo con una consulta SQL directa y revisamos los tamaños de los grupos.</td><td>Sección 9, validación</td></tr>
+      <tr><td>Despliegue</td><td>Publicamos este sitio y el dashboard, y grabamos el video.</td><td>Esta página</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="solucion">
+  <h2>7. Desarrollo de la solución</h2>
+  <p>El módulo se compone de una parte física y una parte de datos. Los usuarios son el conductor, que usa el parqueadero, y el administrador, que mira el tablero.</p>
+  <h3>Dispositivos</h3>
+  <ul>
+    <li>Un ESP32-S3 que lee los sensores y se conecta al Wi-Fi.</li>
+    <li>Cuatro sensores ultrasónicos HC-SR04, uno por espacio. Un espacio cuenta como ocupado si el sensor mide menos de 6 cm.</li>
+    <li>Un sensor infrarrojo FC-51 del lado de la calle, que detecta cuando llega un carro.</li>
+    <li>Un sensor TCRT5000 del lado del parqueadero, que ayuda a contar la entrada y la salida.</li>
+    <li>Un servo SG90 que hace de talanquera y cuatro LEDs que muestran qué espacio está ocupado.</li>
+  </ul>
+  <h3>Cómo funciona</h3>
+  <ol>
+    <li>El FC-51 ve llegar un carro. Si hay cupo, el servo abre la talanquera. Si está lleno, no abre y se guarda un rechazo por lleno.</li>
+    <li>Los HC-SR04 miden cada espacio. Un cambio de estado se confirma con tres lecturas seguidas para no tomar ruido como un carro.</li>
+    <li>El ESP32 manda los datos por MQTT al broker de HiveMQ.</li>
+    <li>Un puente en Python recibe los mensajes y los guarda en SQL Server (base SmartParking_Vivo).</li>
+    <li>Un proceso ETL pasa los datos al Data Warehouse y Power BI los muestra.</li>
+  </ol>
+  <h3>Tecnologías</h3>
+  <p>Arduino (C++) en el ESP32, MQTT con TLS, Python con paho-mqtt y pyodbc, SQL Server, SSIS para el ETL y Power BI Desktop para el dashboard.</p>
+</section>
+
+<section id="datos">
+  <h2>8. Gestión de los datos</h2>
+  <h3>Modelo relacional</h3>
+  <p>La base operativa tiene 17 tablas. Las más importantes son Parqueadero, Espacio, Sensor, Dispositivo, Lectura, Ocupacion, Movimiento, Accionamiento y Falla. Una ocupación es el rato que un carro está en un espacio, con su hora de entrada, hora de salida y duración.</p>
+  <h3>Modelo multidimensional</h3>
+  <p>Para analizar, el Data Warehouse usa un modelo en estrella. La tabla de hechos FactMedicion guarda una fila por sensor y por hora. Se une con cuatro dimensiones: fecha, hora, sensor y ubicación.</p>
+  <table class="datos">
+    <thead><tr><th>Tabla</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td>FactMedicion</td><td>Lecturas, errores, ocupaciones, entradas y rechazos por sensor y hora</td></tr>
+      <tr><td>DimFecha</td><td>Día, mes, día de la semana, si es fin de semana o festivo</td></tr>
+      <tr><td>DimHora</td><td>Hora, franja (mañana, tarde, noche) y si es hora pico</td></tr>
+      <tr><td>DimSensor</td><td>Modelo, variable, unidad y umbral</td></tr>
+      <tr><td>DimUbicacion</td><td>Parqueadero, espacio, ciudad y sector</td></tr>
+    </tbody>
+  </table>
+  <h3>La simulación del millón de mediciones</h3>
+  <p>El profesor pidió mínimo un millón de registros y la maqueta real solo genera unos pocos. Por eso un script de Python (generar_historico.py, con semilla fija 701 para poder repetirlo) simuló 90 días, del 3 de agosto al 31 de octubre de 2026, para 5 parqueaderos y 36 espacios. Siguió patrones realistas: horas pico, menos movimiento los domingos, fallas de sensores y carros que llegan cuando está lleno.</p>
+  <p>Dio unas 1.058.000 lecturas, más de 11.000 ocupaciones y más de 25.000 movimientos. Estos datos son simulados, y las decisiones de abajo valen solo para ese escenario.</p>
+  <h3>Proceso ETL en SSIS</h3>
+  <p>El paquete de SSIS lee la base histórica, limpia los datos y llena el Data Warehouse. Resumido:</p>
+  <ol>
+    <li>Extrae lecturas, ocupaciones y movimientos de SmartParking_Historico.</li>
+    <li>Carga las dimensiones (fecha, hora, sensor, ubicación).</li>
+    <li>Agrupa las lecturas por sensor y por hora y calcula totales, errores y porcentaje de ocupación.</li>
+    <li>Carga FactMedicion con el id de cada dimensión y deja guardada la fecha de carga.</li>
+  </ol>
+  <h3>Preparación y calidad para el dashboard</h3>
+  <table class="datos">
+    <tbody>
+      <tr><th>Fuente</th><td>SmartParking_DW (SQL Server), conectado en DirectQuery</td></tr>
+      <tr><th>Período analizado</th><td>3 de agosto al 31 de octubre de 2026</td></tr>
+      <tr><th>Registros</th><td>101.724 filas en FactMedicion, que resumen 1.058.183 lecturas de 51 sensores</td></tr>
+      <tr><th>Variables usadas</th><td>Ocupaciones, entradas, rechazos por lleno, lecturas, lecturas con error, hora, franja, día, tipo de día, parqueadero, modelo de sensor</td></tr>
+      <tr><th>Reglas de calidad</th><td>Las lecturas inválidas (sin eco) no cuentan para la ocupación y se guardan como error. El % de ocupación se calcula solo con los sensores HC-SR04. El período se filtra a ago-oct para dejar fuera los datos reales de noviembre.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="dashboard">
+  <h2>9. Dashboard de Power BI</h2>
+  <h3>Preguntas que guiaron el análisis</h3>
+  <ol>
+    <li>¿A qué horas hay más ocupaciones y cuándo se pierden carros por falta de cupo?</li>
+    <li>¿Qué parqueadero rechaza más carros y cuánto se ocupa cada uno?</li>
+    <li>¿Cambia el uso entre días de la semana y fines de semana?</li>
+    <li>¿Los sensores fallan mucho, y todos por igual?</li>
+    <li>¿Hay una combinación de parqueadero, franja y tipo de día donde el problema sea más grave?</li>
+  </ol>
+  <h3>Qué contiene el tablero</h3>
+  <table class="datos">
+    <thead><tr><th>Tipo</th><th>Qué se muestra</th></tr></thead>
+    <tbody>
+      <tr><td>Cinco indicadores</td><td>Ocupaciones, entradas, rechazos por lleno, % de rechazo y % de lecturas con error</td></tr>
+      <tr><td>Tres univariados</td><td>Ocupaciones por hora, ocupaciones por día de la semana y rechazos por hora</td></tr>
+      <tr><td>Tres bivariados</td><td>% de ocupación y % de rechazo por parqueadero, y % de error por modelo de sensor</td></tr>
+      <tr><td>Un multivariado</td><td>% de rechazo por parqueadero, franja del día y tipo de día, calculado directo sobre los datos</td></tr>
+    </tbody>
+  </table>
+  <p>El tablero tiene filtros por parqueadero, tipo de día y mes. Si un porcentaje aparece, su denominador está en el título: el rechazo se calcula sobre los carros que llegaron (entradas más rechazos).</p>
+
+  <div class="tablero" id="tablero">
+    <iframe id="pbi" title="Dashboard Smart Parking en Power BI" allowfullscreen="true" hidden></iframe>
+    <div id="pbi-aviso" class="aviso">
+      <p>Aquí va el dashboard de Power BI incrustado.</p>
+      <p>Falta pegar la dirección de «Publicar en la web» en el archivo <code>config.js</code> (variable PBI_URL).</p>
+    </div>
+  </div>
+  <p class="pequeno">Si no carga, usa el enlace directo: <a id="pbi-enlace" href="#dashboard" target="_blank" rel="noopener">abrir el dashboard en otra pestaña</a>.</p>
+
+  <h3 id="envivo">Estado en vivo de la maqueta</h3>
+  <p>El tablero de arriba muestra el histórico simulado. La versión de escritorio tiene además una página En vivo, pero esa lee el SQL Server de nuestro computador y no se puede publicar en la web sin una puerta de enlace de datos. Por eso el estado actual de la maqueta se muestra aquí, leyendo directamente los mensajes MQTT que manda el ESP32 al broker de HiveMQ (tópico <code>smartparking/sp01/</code>).</p>
+  <div class="envivo">
+    <p id="ev-estado">Conectando al broker...</p>
+    <p class="ev-grande" id="ev-resumen">Esperando datos de la maqueta</p>
+    <div id="ev-espacios" class="ev-grid"></div>
+    <p class="pequeno" id="ev-edad"></p>
+    <ul id="ev-log" class="ev-log"></ul>
+  </div>
+  <p class="pequeno">Si la maqueta está apagada no llegan mensajes y el panel queda en espera. Los datos de esta parte son reales de la maqueta y no se mezclan con el millón de registros simulados.</p>
+</section>
+
+<section id="conocimientos">
+  <h2>10. Cinco conocimientos evidentes</h2>
+  <p>Cada gráfico de abajo sale de los mismos datos del dashboard. Los valores se pueden comprobar con las consultas del informe técnico.</p>
+
+  <article class="conoc" id="k1">
+    <h3>Conocimiento 1: el uso se concentra en tres horas del día</h3>
+    <div class="grafico" id="g1"></div>
+    <dl>
+      <dt>Pregunta</dt><dd>¿A qué horas llegan más carros? Sirve para saber cuándo el parqueadero trabaja más.</dd>
+      <dt>Variables</dt><dd>Hora del día y ocupaciones iniciadas (unidad: carros).</dd>
+      <dt>Procedimiento</dt><dd>Se suman las ocupaciones iniciadas de los cinco parqueaderos, de agosto a octubre, agrupadas por hora.</dd>
+      <dt>Resultado</dt><dd>Las horas con más ocupaciones son las 7:00 (1.160), las 12:00 (1.045) y las 17:00 (926). De 1:00 a 4:00 hay menos de 65 por hora.</dd>
+      <dt>Hallazgo</dt><dd>Hay tres picos que coinciden con entrada al trabajo, almuerzo y salida.</dd>
+      <dt>Interpretación</dt><dd>La demanda sigue el horario de una ciudad con oficinas, y la madrugada casi no se usa.</dd>
+      <dt>Utilidad</dt><dd>Permite poner personal o avisos en las horas de más movimiento.</dd>
+      <dt>Limitación</dt><dd>Son datos simulados con horas pico puestas por nosotros, así que confirma que la simulación funciona pero no mide una ciudad real.</dd>
+    </dl>
+  </article>
+
+  <article class="conoc" id="k2">
+    <h3>Conocimiento 2: los rechazos por lleno pasan entre las 8 y las 10</h3>
+    <div class="grafico" id="g2"></div>
+    <dl>
+      <dt>Pregunta</dt><dd>¿Cuándo se queda un carro sin entrar porque no hay cupo?</dd>
+      <dt>Variables</dt><dd>Hora y rechazos por lleno (unidad: carros que no entraron).</dd>
+      <dt>Procedimiento</dt><dd>Se suman los rechazos por hora en los cinco parqueaderos y se compara con el total de 2.122.</dd>
+      <dt>Resultado</dt><dd>Entre las 8:00 y las 10:59 hubo 831 rechazos (257, 316 y 258), cerca del 39 % del total.</dd>
+      <dt>Hallazgo</dt><dd>Las horas con más rechazos no son las del mayor número de llegadas. A las 7:00 llegan más carros (1.160) pero casi no hay rechazo (22).</dd>
+      <dt>Interpretación</dt><dd>A las 7:00 todavía hay espacios. A las 8:00 ya se llenaron y los que llegan después no caben, porque los que entraron temprano siguen dentro.</dd>
+      <dt>Utilidad</dt><dd>Marca la franja donde conviene avisar que está lleno.</dd>
+      <dt>Limitación</dt><dd>No sabemos adónde se fue el carro rechazado, ni si volvió a llegar.</dd>
+    </dl>
+  </article>
+
+  <article class="conoc" id="k3">
+    <h3>Conocimiento 3: SP-05 y SP-01 rechazan mucho más que SP-04</h3>
+    <div class="grafico" id="g3"></div>
+    <dl>
+      <dt>Pregunta</dt><dd>¿Qué parqueadero tiene el problema de cupo más fuerte?</dd>
+      <dt>Variables</dt><dd>Parqueadero, entradas, rechazos por lleno y porcentaje de ocupación.</dd>
+      <dt>Procedimiento</dt><dd>% de rechazo = rechazos / (entradas + rechazos). Se calcula por parqueadero con los datos de ago-oct.</dd>
+      <dt>Resultado</dt><dd>SP-05 rechaza el 24,5 % (463 de 1.890 llegadas), SP-01 el 20,0 % (386 de 1.927), SP-03 el 17,1 %, SP-02 el 15,7 % y SP-04 solo el 4,7 % (152 de 3.221).</dd>
+      <dt>Hallazgo</dt><dd>SP-04 es el que más carros recibe junto a SP-02 y casi no rechaza. SP-05 es el más pequeño y está ocupado la mitad del tiempo (51,6 % contra cerca del 30 % de los otros).</dd>
+      <dt>Interpretación</dt><dd>El problema no depende solo de cuántos carros llegan. Parece depender de la capacidad de cada parqueadero frente a su demanda.</dd>
+      <dt>Utilidad</dt><dd>Ayuda a escoger dónde ampliar o a qué parqueadero mandar los carros sobrantes.</dd>
+      <dt>Limitación</dt><dd>Es una asociación. No tenemos la capacidad real de cada parqueadero para explicar la causa.</dd>
+    </dl>
+  </article>
+
+  <article class="conoc" id="k4">
+    <h3>Conocimiento 4: el domingo se usa la mitad que un día de semana</h3>
+    <div class="grafico" id="g4"></div>
+    <dl>
+      <dt>Pregunta</dt><dd>¿Cambia el uso entre días de la semana?</dd>
+      <dt>Variables</dt><dd>Día de la semana y ocupaciones iniciadas.</dd>
+      <dt>Procedimiento</dt><dd>Se suman las ocupaciones por día de la semana y se dividen entre los días que hay de cada uno (13 de cada día, y 12 domingos), para comparar justo.</dd>
+      <dt>Resultado</dt><dd>Un lunes promedia 133 ocupaciones por día, martes y viernes 141, sábado 115 y domingo 75.</dd>
+      <dt>Hallazgo</dt><dd>El domingo baja cerca del 45 % frente a un día hábil, y el sábado cerca del 17 %.</dd>
+      <dt>Interpretación</dt><dd>La demanda es de tipo laboral, y esto se refleja en que SP-04 (colegio) y los comerciales bajan los fines de semana.</dd>
+      <dt>Utilidad</dt><dd>Los fines de semana se pueden hacer mantenimiento o revisión de sensores con menos riesgo.</dd>
+      <dt>Limitación</dt><dd>Hay solo 12 o 13 días de cada tipo, y los festivos están mezclados con los demás días.</dd>
+    </dl>
+  </article>
+
+  <article class="conoc" id="k5">
+    <h3>Conocimiento 5: el peor caso es SP-05 de noche entre semana</h3>
+    <div class="grafico" id="g5"></div>
+    <dl>
+      <dt>Pregunta</dt><dd>¿Hay una combinación de parqueadero, franja y tipo de día donde el rechazo sea mucho peor que el promedio?</dd>
+      <dt>Variables</dt><dd>Parqueadero, franja del día, tipo de día, entradas y rechazos.</dd>
+      <dt>Procedimiento</dt><dd>Consulta SQL que agrupa por las tres variables juntas y calcula el % de rechazo de cada grupo. Se dejan solo los grupos con más de 200 llegadas.</dd>
+      <dt>Resultado</dt><dd>SP-05, noche, día hábil: 57,5 % (404 rechazos de 703 llegadas). Le sigue SP-01 de mañana en día hábil con 34,7 % y SP-02 con 31,5 %. En cambio SP-05 de tarde en día hábil rechaza solo el 0,2 %.</dd>
+      <dt>Hallazgo</dt><dd>El mismo parqueadero pasa de 0,2 % a 57,5 % según la franja. El promedio de 24,5 % de SP-05 esconde esa diferencia.</dd>
+      <dt>Interpretación</dt><dd>SP-05 es residencial: se llena de noche cuando la gente regresa. Los otros se llenan por la mañana.</dd>
+      <dt>Utilidad</dt><dd>Muestra que la acción para SP-05 debe ser en la noche y no en todo el día.</dd>
+      <dt>Limitación</dt><dd>Los grupos tienen entre 200 y 1.200 llegadas, así que los porcentajes de los grupos más chicos son menos estables.</dd>
+    </dl>
+  </article>
+</section>
+
+<section id="validacion">
+  <h2>11. Validación</h2>
+  <ul>
+    <li>Cada hallazgo se calculó con una consulta SQL directa a SmartParking_DW y se comparó con lo que muestra Power BI. Las consultas están en el informe técnico y se pueden repetir.</li>
+    <li>Se revisó el tamaño de cada grupo. Todos los grupos del conocimiento 5 tienen más de 200 llegadas.</li>
+    <li>Valores faltantes y atípicos: solo los sensores HC-SR04 tienen lecturas con error (5.909 de 918.171, es decir 0,64 %). El FC-51, el TCRT5000 y el LDR tienen cero errores. Esto es porque un sensor ultrasónico puede no recibir eco, y los otros solo dan sí o no.</li>
+    <li>Hubo que investigar un dato raro: en el DW aparece un sensor LDR, pero en la maqueta real no hay fotorresistencia. Viene de la simulación, que lo incluyó como sensor del modelo. No se usa en ningún hallazgo.</li>
+    <li>Todas las relaciones se presentan como asociaciones. No demostramos que una cosa cause la otra.</li>
+  </ul>
+</section>
+
+<section id="decisiones">
+  <h2>12. Decisiones</h2>
+
+  <article class="decision">
+    <h3>Decisión 1: avisar que está lleno de 8 a 10 a.m. y redirigir a SP-04</h3>
+    <dl>
+      <dt>Acción</dt><dd>Mostrar un aviso de «parqueadero lleno» con anticipación en SP-01, SP-02 y SP-03 en la mañana de días hábiles, y mandar los carros a SP-04.</dd>
+      <dt>Hallazgo y valores</dt><dd>Entre las 8 y las 10:59 se concentra el 39 % de los rechazos (831 de 2.122). En la mañana de días hábiles SP-01 rechaza 34,7 %, SP-02 31,5 % y SP-03 29,6 %. SP-04 rechaza solo 6,5 % en esa franja.</dd>
+      <dt>A quién va dirigida</dt><dd>Los parqueaderos SP-01, SP-02 y SP-03, franja de mañana, de lunes a viernes.</dd>
+      <dt>Mejora esperada e indicador</dt><dd>Bajar los rechazos de esa franja. Indicador: % de rechazo por lleno de 8:00 a 10:59 en días hábiles. Meta: pasar de cerca del 32 % a menos del 20 %.</dd>
+      <dt>Limitaciones</dt><dd>SP-04 también tiene un límite de espacios, y en los datos no se ve si un conductor aceptaría ir a otro parqueadero.</dd>
+    </dl>
+  </article>
+
+  <article class="decision">
+    <h3>Decisión 2: reforzar SP-05 en la noche de días hábiles</h3>
+    <dl>
+      <dt>Acción</dt><dd>Revisar la capacidad de SP-05 y habilitar más cupos o un convenio con otro parqueadero para las horas de la noche entre semana.</dd>
+      <dt>Hallazgo y valores</dt><dd>SP-05 de noche en días hábiles rechaza 57,5 % (404 de 703 llegadas), mientras en la tarde rechaza 0,2 %. Su ocupación media es 51,6 %, la más alta de la red.</dd>
+      <dt>A quién va dirigida</dt><dd>Parqueadero SP-05 Residencial Norte, franja de noche, lunes a viernes.</dd>
+      <dt>Mejora esperada e indicador</dt><dd>Reducir los rechazos nocturnos. Indicador: % de rechazo de SP-05 en la noche de días hábiles. Meta: bajar de 57,5 % a menos del 30 %.</dd>
+      <dt>Limitaciones</dt><dd>No sabemos cuántos espacios reales tiene SP-05 ni cuánto costaría ampliar. Los datos son simulados.</dd>
+    </dl>
+  </article>
+</section>
+
+<section id="conclusiones">
+  <h2>13. Conclusiones y referencias</h2>
+  <h3>Cumplimiento de los objetivos</h3>
+  <p>Se logró un prototipo que mide la ocupación, abre la talanquera según el cupo y guarda las lecturas en SQL Server. También se armó un Data Warehouse con más de un millón de lecturas simuladas y un dashboard con los indicadores y análisis pedidos. Salieron cinco conocimientos y dos decisiones respaldadas por los datos.</p>
+  <h3>Limitaciones</h3>
+  <ul>
+    <li>La maqueta tiene solo cuatro espacios, y el millón de lecturas es simulado.</li>
+    <li>Los resultados muestran asociaciones y no causas.</li>
+    <li>La conexión por MQTT usa un broker público, y el puente tiene que estar encendido para que se guarden datos.</li>
+    <li>La alimentación sin PC y algunos sensores no se probaron del todo en la maqueta real.</li>
+  </ul>
+  <h3>Oportunidades de mejora</h3>
+  <ul>
+    <li>Probar con datos de un parqueadero real.</li>
+    <li>Agregar la duración de cada estadía al análisis.</li>
+    <li>Usar un broker propio y proteger los mensajes.</li>
+  </ul>
+  <h3>Fuentes consultadas</h3>
+  <ul class="refs">
+    <li><a href="https://learn.microsoft.com/es-es/power-bi/fundamentals/power-bi-overview" target="_blank" rel="noopener">Microsoft Learn: ¿Qué es Power BI?</a></li>
+    <li><a href="https://learn.microsoft.com/es-es/power-bi/connect-data/desktop-directquery-about" target="_blank" rel="noopener">Microsoft Learn: Modo DirectQuery en Power BI Desktop</a></li>
+    <li><a href="https://learn.microsoft.com/es-es/sql/integration-services/sql-server-integration-services" target="_blank" rel="noopener">Microsoft Learn: SQL Server Integration Services</a></li>
+    <li><a href="https://learn.microsoft.com/es-es/power-bi/collaborate-share/service-publish-to-web" target="_blank" rel="noopener">Microsoft Learn: Publicar en la web desde Power BI</a></li>
+  </ul>
+</section>
+
+</main>
+
+<footer>Smart Parking, grupo 701N, Universidad de Cundinamarca. Los datos de agosto a octubre de 2026 son simulados.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.4/dist/mqtt.min.js"></script>
+<script src="envivo.js"></script>
+<script src="config.js"></script>
+<script src="graficos.js"></script>
+</body>
+</html>

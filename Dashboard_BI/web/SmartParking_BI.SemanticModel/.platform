@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "SmartParking_BI"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "d246b10b-039c-4d41-b753-dc81dc5b0fd5"
+  }
+}

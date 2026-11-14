@@ -1,0 +1,65 @@
+{
+  "name": "SmartParking Senalizacion",
+  "dataColors": [
+    "#3987E5",
+    "#D95926",
+    "#199E70",
+    "#C98500",
+    "#D55181",
+    "#008300",
+    "#9085E9",
+    "#E66767"
+  ],
+  "background": "#10151C",
+  "foreground": "#F0EFEC",
+  "tableAccent": "#3987E5",
+  "good": "#25B04A",
+  "neutral": "#C98500",
+  "bad": "#E25555",
+  "maximum": "#3987E5",
+  "center": "#3A4553",
+  "minimum": "#12335C",
+  "null": "#A3A29B",
+  "textClasses": {
+    "callout": {
+      "fontSize": 30,
+      "fontFace": "Bahnschrift SemiBold",
+      "color": "#F0EFEC"
+    },
+    "title": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#C3C2B7"
+    },
+    "header": {
+      "fontSize": 11,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#C3C2B7"
+    },
+    "label": {
+      "fontSize": 10,
+      "fontFace": "Segoe UI",
+      "color": "#C3C2B7"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ],
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#10151C"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

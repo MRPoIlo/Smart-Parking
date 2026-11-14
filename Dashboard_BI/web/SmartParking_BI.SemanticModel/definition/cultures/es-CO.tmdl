@@ -1,0 +1,144 @@
+cultureInfo es-CO
+
+	linguisticMetadata =
+			{
+			  "Version": "2.0.0",
+			  "Language": "en-US",
+			  "Entities": {
+			    "dimfecha.nombre_dia": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "DimFecha",
+			          "ConceptualProperty": "nombre_dia"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Día": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dimhora.hora_texto": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "DimHora",
+			          "ConceptualProperty": "hora_texto"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Hora": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "factmedicion.svg_lead_red": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "FactMedicion",
+			          "ConceptualProperty": "SVG lead red"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "factmedicion.svg_lead_congestion": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "FactMedicion",
+			          "ConceptualProperty": "SVG lead congestion"
+			        }
+			      },
+			      "State": "Generated"
+			    },
+			    "dimsensor.sensor_completo": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "DimSensor",
+			          "ConceptualProperty": "sensor_completo"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Sensor": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dimsensor.modelo": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "DimSensor",
+			          "ConceptualProperty": "modelo"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Modelo": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Modelo de sensor": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "dimubicacion.codigo_parqueadero": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "DimUbicacion",
+			          "ConceptualProperty": "codigo_parqueadero"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Parqueadero": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    }
+			  }
+			}
+		contentType: json
+

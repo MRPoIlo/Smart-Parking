@@ -1,0 +1,112 @@
+table DimFecha
+	lineageTag: 1bd4988a-363e-4e2c-8bd8-edc445e51305
+
+	column sk_fecha
+		dataType: int64
+		isHidden
+		lineageTag: c7a0737f-ca35-4ac3-b988-c348425c57e7
+		summarizeBy: none
+		sourceColumn: sk_fecha
+
+	column fecha
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 64bd85ba-a706-485e-9324-462621114063
+		summarizeBy: none
+		sourceColumn: fecha
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column anio
+		dataType: int64
+		lineageTag: 652663f6-d7e4-4d5a-99d6-55c3ee54fd97
+		summarizeBy: none
+		sourceColumn: anio
+
+	column trimestre
+		dataType: int64
+		lineageTag: ba35790a-2fea-4225-ad90-cca75b122488
+		summarizeBy: none
+		sourceColumn: trimestre
+
+	column mes
+		dataType: int64
+		isHidden
+		lineageTag: d9f1f81d-4428-48a6-9267-33aedb21636f
+		summarizeBy: none
+		sourceColumn: mes
+
+	column nombre_mes
+		dataType: string
+		lineageTag: 6c878df3-98ba-4497-9827-3146e14ea22f
+		summarizeBy: none
+		sourceColumn: nombre_mes
+		sortByColumn: mes
+
+	column anio_mes
+		dataType: string
+		lineageTag: 29245d9a-f96e-4d11-a2d9-0ec66603925a
+		summarizeBy: none
+		sourceColumn: anio_mes
+
+	column semana_anio
+		dataType: int64
+		lineageTag: fe3e424e-dada-4ef5-8cd7-e8098b587b23
+		summarizeBy: none
+		sourceColumn: semana_anio
+
+	column dia_mes
+		dataType: int64
+		lineageTag: aab2ec7b-8ca7-4336-8d72-61a46ceddf65
+		summarizeBy: none
+		sourceColumn: dia_mes
+
+	column dia_semana
+		dataType: int64
+		isHidden
+		lineageTag: 6dcc364c-22e9-447b-b0df-945644d9d6bc
+		summarizeBy: none
+		sourceColumn: dia_semana
+
+	column nombre_dia
+		dataType: string
+		lineageTag: 34f1dcc2-8281-4bc4-84a9-da188a0b2f85
+		summarizeBy: none
+		sourceColumn: nombre_dia
+		sortByColumn: dia_semana
+
+	column es_fin_semana
+		dataType: boolean
+		lineageTag: b0f14320-8729-4a0f-bf37-7cdb8839e38a
+		summarizeBy: none
+		sourceColumn: es_fin_semana
+
+	column es_festivo
+		dataType: boolean
+		lineageTag: d6ce8dc2-634b-4121-a28b-a1b92f61a3f8
+		summarizeBy: none
+		sourceColumn: es_festivo
+
+	column nombre_festivo
+		dataType: string
+		lineageTag: 22da40b4-82c4-4f37-9dab-6d23ae80131d
+		summarizeBy: none
+		sourceColumn: nombre_festivo
+
+	column tipo_dia
+		dataType: string
+		lineageTag: 07831ea2-b2d2-42d8-bf83-a977c84e3c83
+		summarizeBy: none
+		sourceColumn: tipo_dia
+
+	partition DimFecha = m
+		mode: import
+		source =
+				let
+				    Origen = Sql.Database(Servidor, BaseDatos),
+				    Tabla = Origen{[Schema = "dbo", Item = "DimFecha"]}[Data]
+				in
+				    Tabla
+
+	annotation PBI_ResultType = Table
+

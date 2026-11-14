@@ -1,0 +1,112 @@
+table DimSensor
+	lineageTag: 5ec5baa5-5b9c-454f-b6af-6165accc8a6b
+
+	column sk_sensor
+		dataType: int64
+		isHidden
+		lineageTag: abdf48ed-33f7-47ed-ae6b-4521e5e5a48c
+		summarizeBy: none
+		sourceColumn: sk_sensor
+
+	column id_sensor
+		dataType: int64
+		isHidden
+		lineageTag: 0fc30f65-a495-4c9d-adf9-a242693b4cd9
+		summarizeBy: none
+		sourceColumn: id_sensor
+
+	column codigo_sensor
+		dataType: string
+		lineageTag: 59e8b57f-2cc3-4988-9e2a-c26cd2cd3c41
+		summarizeBy: none
+		sourceColumn: codigo_sensor
+
+	column sensor_completo
+		dataType: string
+		lineageTag: 2e33991b-ddd4-4dbd-9d58-f0d9936c5f53
+		summarizeBy: none
+		sourceColumn: sensor_completo
+
+	column modelo
+		dataType: string
+		lineageTag: 84f343f6-8fe6-4d37-897b-6b8d561a2504
+		summarizeBy: none
+		sourceColumn: modelo
+
+	column variable
+		dataType: string
+		lineageTag: e3a24ced-c351-47f8-a54b-834f81212981
+		summarizeBy: none
+		sourceColumn: variable
+
+	column unidad
+		dataType: string
+		lineageTag: 3e8929fb-7bd4-4bca-930a-1edcb0d7d572
+		summarizeBy: none
+		sourceColumn: unidad
+
+	column rango_min
+		dataType: double
+		lineageTag: 2c8f0818-4861-433f-83bb-d71de29d656d
+		summarizeBy: none
+		sourceColumn: rango_min
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column rango_max
+		dataType: double
+		lineageTag: ceed9c5a-9deb-41fa-982e-892f04694f5c
+		summarizeBy: none
+		sourceColumn: rango_max
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column umbral_cm
+		dataType: double
+		lineageTag: 416327e8-62cc-490a-ada5-d5a0f5103d1a
+		summarizeBy: none
+		sourceColumn: umbral_cm
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column tiene_umbral
+		dataType: boolean
+		lineageTag: c82488c7-ed21-48f3-a07b-2b82c2c28e58
+		summarizeBy: none
+		sourceColumn: tiene_umbral
+
+	column pin_gpio
+		dataType: string
+		lineageTag: e898e3d2-e866-4cfd-8219-92f6a97cf239
+		summarizeBy: none
+		sourceColumn: pin_gpio
+
+	column codigo_dispositivo
+		dataType: string
+		lineageTag: 7a402b81-8fc5-4789-8d93-2fab5ab08d08
+		summarizeBy: none
+		sourceColumn: codigo_dispositivo
+
+	column microcontrolador
+		dataType: string
+		lineageTag: b6840104-1e22-4fc5-b078-b16884f2896a
+		summarizeBy: none
+		sourceColumn: microcontrolador
+
+	column estado_sensor
+		dataType: string
+		lineageTag: 81fa358d-515c-4220-ad2f-56801947cbe4
+		summarizeBy: none
+		sourceColumn: estado_sensor
+
+	partition DimSensor = m
+		mode: import
+		source =
+				let
+				    Origen = Sql.Database(Servidor, BaseDatos),
+				    Tabla = Origen{[Schema = "dbo", Item = "DimSensor"]}[Data]
+				in
+				    Tabla
+
+	annotation PBI_ResultType = Table
+
