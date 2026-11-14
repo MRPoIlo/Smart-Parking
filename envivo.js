@@ -74,6 +74,11 @@
     var r = t.slice(BASE.length);
     var mm = r.match(/^espacios\/([1-4])$/);
     if (mm) esp[mm[1]] = aBool(m);
+    else if (r === "conexion") {
+      var on = /online|conectad|1|true/i.test(m) && !/offline/i.test(m);
+      estado.textContent = on ? "Maqueta conectada y enviando datos." : "Maqueta desconectada: se muestra el último estado guardado en el broker.";
+      estado.className = on ? "ev-ok" : "";
+    }
     else if (r === "libres") libres = aNum(m);
     else if (r === "ocupados") ocupados = aNum(m);
     anotar(t, m.length > 80 ? m.slice(0, 80) + "..." : m);
